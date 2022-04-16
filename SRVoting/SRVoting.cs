@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MelonLoader;
+using SRVoting.Auth;
 using SRVoting.Util;
 
 namespace SRVoting
@@ -17,8 +18,6 @@ namespace SRVoting
             base.OnApplicationStart();
 
             logger = new MelonLoggerWrapper(LoggerInstance);
-
-            logger.Msg("Started SRVoting");
         }
 
         public override void OnSceneWasInitialized(int buildIndex, string sceneName)
@@ -27,6 +26,16 @@ namespace SRVoting
 
             SRScene scene = new SRScene(sceneName);
             logger.Msg("Scene initialized: " + sceneName + ". Type: " + scene.SceneType);
+
+            if (scene.SceneType == SRScene.SRSceneType.WARNING)
+            {
+                // After some things have initialized, but before main scene, try to authenticate
+                logger.Msg("Logging into Synthriderz...");
+                var steamAuthService = new SteamAuthService(logger);
+                steamAuthService.LoginAsync(token => {
+                    logger.Msg("Steam token: " + token);
+                });
+            }
 
             if (scene.SceneType == SRScene.SRSceneType.MAIN_MENU)
             {

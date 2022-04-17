@@ -34,6 +34,7 @@ namespace SRVoting
                 var steamAuthService = new SteamAuthService(logger);
                 steamAuthService.LoginAsync(token => {
                     logger.Msg("Steam token: " + token);
+
                 });
             }
 

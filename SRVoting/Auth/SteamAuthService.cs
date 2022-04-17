@@ -12,11 +12,17 @@ namespace SRVoting.Auth
     public class SteamAuthService
     {
         private readonly int STEAM_MANAGER_WAIT_MS = 500;
+
         private ILogger logger;
+        private AppId_t appId;
+        private HAuthTicket lastTicket;
+        private EResult lastTicketResult;
+        private Callback<GetAuthSessionTicketResponse_t> m_GetAuthSessionTicketResponse;
 
         public SteamAuthService(ILogger logger)
         {
             this.logger = logger;
+            appId = SteamUtils.GetAppID(); // 885000
         }
 
         private string LoginThreaded()
@@ -32,19 +38,82 @@ namespace SRVoting.Auth
             try
             {
                 var username = SteamFriends.GetPersonaName();
-                var steamID = SteamUser.GetSteamID();
+                var steamId = SteamUser.GetSteamID();
 
-                byte[] array = new byte[1024];
+                // Get auth session ticket
+                int authTicketMaxLength = 1024;
+                byte[] authTicket = new byte[authTicketMaxLength];
                 uint length = 0U;
-                if (SteamUser.GetAuthSessionTicket(array, array.Length, out length) == HAuthTicket.Invalid)
+                if (SteamUser.GetAuthSessionTicket(authTicket, authTicket.Length, out length) == HAuthTicket.Invalid)
                 {
                     logger.Msg("There was error getting steam ticked");
                     return null;
                 }
 
-                string userTicket = BitConverter.ToString(array, 0, (int)length);
-                string userNonce = userTicket.Replace("-", "").ToLowerInvariant();
-                return userNonce;
+                // Start auth session
+                var beginAuthSessionResult = SteamUser.BeginAuthSession(authTicket, (int)length, steamId);
+                string userToken = null;
+                switch (beginAuthSessionResult)
+                {
+                    case EBeginAuthSessionResult.k_EBeginAuthSessionResultOK:
+                        var result = SteamUser.UserHasLicenseForApp(steamId, appId);
+
+                        SteamUser.EndAuthSession(steamId);
+
+                        switch (result)
+                        {
+                            case EUserHasLicenseForAppResult.k_EUserHasLicenseResultDoesNotHaveLicense:
+                                logger.Msg("User does not have license");
+                                break;
+                            case EUserHasLicenseForAppResult.k_EUserHasLicenseResultHasLicense:
+                                if (m_GetAuthSessionTicketResponse == null)
+                                {
+                                    m_GetAuthSessionTicketResponse = Callback<GetAuthSessionTicketResponse_t>.Create(response => {
+                                        if (lastTicket == response.m_hAuthTicket)
+                                        {
+                                            lastTicketResult = response.m_eResult;
+                                        }
+                                    });
+                                }
+
+                                lastTicket = SteamUser.GetAuthSessionTicket(authTicket, authTicketMaxLength, out length);
+                                if (lastTicket != HAuthTicket.Invalid)
+                                {
+                                    userToken = BitConverter.ToString(authTicket, 0, (int)length).Replace("-", "");
+                                    break;
+                                }
+
+                                break;
+                            case EUserHasLicenseForAppResult.k_EUserHasLicenseResultNoAuth:
+                                logger.Msg("User is not authenticated");
+                                break;
+                        }
+                        break;
+                    default:
+                        logger.Msg("Auth failed");
+                        break;
+                }
+
+                logger.Msg("Waiting for Steam callback...");
+
+                var startTime = DateTime.UtcNow;
+                float timeoutSec = 20f;
+                while (lastTicketResult != EResult.k_EResultOK && (DateTime.UtcNow - startTime).TotalSeconds < timeoutSec)
+                {
+                    Thread.Sleep(1000);
+                }
+
+                if (lastTicketResult != EResult.k_EResultOK)
+                {
+                    logger.Msg($"Auth ticket callback timeout");
+                    return null;
+                }
+
+                // Used, so revoke
+                lastTicketResult = EResult.k_EResultRevoked;
+
+                logger.Msg("Done with Steam auth");
+                return userToken;
             }
             catch (Exception e)
             {

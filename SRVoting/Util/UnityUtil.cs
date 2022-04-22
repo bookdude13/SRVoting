@@ -95,7 +95,7 @@ namespace SRVoting.Util
          * Prints out the components attached to the given game object and all children.
          * Useful for describing objects to clone/instantiate
          */
-        public static void LogComponentsRecursive(MelonLogger.Instance logger, Transform root, string tabs = "")
+        public static void LogComponentsRecursive(ILogger logger, Transform root, string tabs = "")
         {
             if (root == null)
             {

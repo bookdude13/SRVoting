@@ -41,6 +41,10 @@
     <Reference Include="MelonLoader">
       <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\SynthRiders\MelonLoader\MelonLoader.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\SynthRiders\SynthRiders_Data\Managed\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -71,6 +75,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Models\BeatmapModel.cs" />
     <Compile Include="Models\GetVotesResponse.cs" />
     <Compile Include="Models\VoteState.cs" />
     <Compile Include="Services\SteamAuthService.cs" />

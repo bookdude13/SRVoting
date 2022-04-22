@@ -63,13 +63,32 @@ namespace SRVoting
             GetVotesResponse getVotesResponse = null;
             yield return synthriderzService.GetVotes(songHash, (response) => getVotesResponse = response);
 
-            logger.Msg("Successfully retrieved votes. Updating UI...");
-
-            logger.Msg("My vote: " + getVotesResponse?.MyVote);
-
-            // TODO
+            if (getVotesResponse == null)
+            {
+                logger.Msg("No vote data, disabling arrows...");
+                UpdateUIUp(false, false, "");
+                UpdateUIDown(false, false, "");
+            }
+            else
+            {
+                logger.Msg("Successfully retrieved votes. Updating UI...");
+                UpdateUIUp(true, getVotesResponse.MyVote() == VoteState.VOTED_UP, string.Format("{0}", getVotesResponse.UpVoteCount));
+                UpdateUIDown(true, getVotesResponse.MyVote() == VoteState.VOTED_DOWN, string.Format("{0}", getVotesResponse.DownVoteCount));
+            }
 
             logger.Msg("Done updating UI");
+        }
+
+        private void UpdateUIUp(bool isActive, bool isMyVote, string text)
+        {
+            upVoteCountText.SetText(text);
+            upArrow.SetActive(isActive);
+        }
+
+        private void UpdateUIDown(bool isActive, bool isMyVote, string text)
+        {
+            downVoteCountText.SetText(text);
+            downArrow.SetActive(isActive);
         }
 
         private IEnumerator EnsureUIExists()
@@ -153,10 +172,11 @@ namespace SRVoting
             var voteCountText = GameObject.Instantiate(textReference, voteContainer);
             voteCountText.name = voteArrow.name + "_text";
             voteCountText.transform.localPosition = voteArrow.transform.localPosition + new Vector3(1.2f, 0.0f, 0.0f);
-            voteCountText.transform.localEulerAngles = textReference.transform.localEulerAngles;
+            voteCountText.transform.eulerAngles = textReference.transform.eulerAngles;
 
             var text = voteCountText.GetComponent<TMPro.TMP_Text>();
-            text?.SetText("#####");
+            text.SetText("#####");
+            text.alignment = TMPro.TextAlignmentOptions.Left;
 
             logger.Msg("Text added");
             return text;

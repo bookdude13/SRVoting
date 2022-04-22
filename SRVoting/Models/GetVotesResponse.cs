@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using SRVoting.Util;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,20 +10,42 @@ namespace SRVoting.Models
 {
     public class GetVotesResponse
     {
+        [JsonProperty("id")]
+        public int? Id { get; set; }
+        [JsonProperty("entity_id")]
+        public int EntityId { get; set; }
+        [JsonProperty("entity_type")]
+        public string EntityType { get; set; }
+        [JsonProperty("upvote")]
+        public bool? IsUpvote;
+        [JsonProperty("upvote_count")]
         public int UpVoteCount { get; set; }
+        [JsonProperty("downvote_count")]
         public int DownVoteCount { get; set; }
-        public VoteState MyVote { get; set; }
-        public int MapSynthriderzId { get; set; }
+        [JsonProperty("beatmap")]
+        public BeatmapModel Beatmap { get; set; }
 
-        public static GetVotesResponse FromJson(string json)
+        public VoteState MyVote()
         {
-            return new GetVotesResponse
+            if (IsUpvote == null)
             {
-                UpVoteCount = 9999,
-                DownVoteCount = 9999,
-                MapSynthriderzId = 88888,
-                MyVote = VoteState.NO_VOTE
-            };
+                return VoteState.NO_VOTE;
+            }
+
+            return IsUpvote.Value ? VoteState.VOTED_UP : VoteState.VOTED_DOWN;
+        }
+
+        public static GetVotesResponse FromJson(ILogger logger, string json)
+        {
+            try
+            {
+                return JsonConvert.DeserializeObject<GetVotesResponse>(json);
+            }
+            catch (Exception e)
+            {
+                logger.Msg("Failed to deserialize response: " + e.Message);
+                return null;
+            }
         }
     }
 }

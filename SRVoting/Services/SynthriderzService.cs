@@ -69,7 +69,7 @@ namespace SRVoting.Services
                 {
                     logger.Msg("Success!");
                     logger.Msg(responseRaw);
-                    onSuccess(GetVotesResponse.FromJson(responseRaw));
+                    onSuccess(GetVotesResponse.FromJson(logger, responseRaw));
                 }
                 else
                 {
@@ -91,7 +91,7 @@ namespace SRVoting.Services
                             logger.Msg("Forbidden auth ticket: " + responseRaw);
                             break;
                         case 404:
-                            logger.Msg("Map not found: " + responseRaw);
+                            logger.Msg("Map not found");
                             break;
                         case 400:
                             logger.Msg("Bad request: " + responseRaw);

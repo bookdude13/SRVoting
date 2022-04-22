@@ -47,10 +47,14 @@ namespace SRVoting
             }
 
             logger.Msg("Song clicked; waiting for update");
-            yield return new WaitForSeconds(0.1f);
+            yield return new WaitForSeconds(0.01f);
 
             logger.Msg("Make sure UI exists...");
             yield return EnsureUIExists();
+
+            // Disable UI until we get response, to avoid voting on other songs
+            UpdateUIUp(false, false, "");
+            UpdateUIDown(false, false, "");
 
             logger.Msg("Getting selected track...");
             var selectedTrack = Synth.SongSelection.SongSelectionManager.GetInstance?.SelectedGameTrack;
@@ -60,23 +64,32 @@ namespace SRVoting
             bool canLeaderboard = selectedTrack?.CanUpdateLeaderboard ?? false;
             logger.Msg($"{songName} selected. IsCustom? {isCustom}. CanPostLeaderboards? {canLeaderboard}. Hash: {songHash}");
 
-            GetVotesResponse getVotesResponse = null;
-            yield return synthriderzService.GetVotes(songHash, (response) => getVotesResponse = response);
-
-            if (getVotesResponse == null)
+            if (!isCustom)
             {
-                logger.Msg("No vote data, disabling arrows...");
+                logger.Msg("Not showing votes for OST");
                 UpdateUIUp(false, false, "");
                 UpdateUIDown(false, false, "");
             }
             else
             {
-                logger.Msg("Successfully retrieved votes. Updating UI...");
-                UpdateUIUp(true, getVotesResponse.MyVote() == VoteState.VOTED_UP, string.Format("{0}", getVotesResponse.UpVoteCount));
-                UpdateUIDown(true, getVotesResponse.MyVote() == VoteState.VOTED_DOWN, string.Format("{0}", getVotesResponse.DownVoteCount));
-            }
+                GetVotesResponse getVotesResponse = null;
+                yield return synthriderzService.GetVotes(songHash, (response) => getVotesResponse = response);
 
-            logger.Msg("Done updating UI");
+                if (getVotesResponse == null)
+                {
+                    logger.Msg("No vote data, disabling arrows...");
+                    UpdateUIUp(false, false, "");
+                    UpdateUIDown(false, false, "");
+                }
+                else
+                {
+                    logger.Msg("Successfully retrieved votes. Updating UI...");
+                    UpdateUIUp(true, getVotesResponse.MyVote() == VoteState.VOTED_UP, string.Format("{0}", getVotesResponse.UpVoteCount));
+                    UpdateUIDown(true, getVotesResponse.MyVote() == VoteState.VOTED_DOWN, string.Format("{0}", getVotesResponse.DownVoteCount));
+                }
+
+                logger.Msg("Done updating UI");
+            }
         }
 
         private void UpdateUIUp(bool isActive, bool isMyVote, string text)
@@ -159,9 +172,6 @@ namespace SRVoting
 
             voteArrow.gameObject.SetActive(true);
             buttonEvents.OnUse.AddListener((sender, e) => Vote( ((VRTK.VRTK_InteractableObject)sender).name ));
-
-            // Add current number of votes next to button
-
 
             logger.Msg($"Arrow {arrowName} added");
             return voteArrow.gameObject;

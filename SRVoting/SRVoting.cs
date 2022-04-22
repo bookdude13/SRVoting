@@ -50,16 +50,9 @@ namespace SRVoting
                 votingBehavior = votingGO.AddComponent<VotingMonoBehavior>();
                 votingBehavior.Init(logger, synthriderzService);
 
-                Synth.Data.SongsProvider.GetInstance.ItemClicked += (index) => { SongChanged(); };
-                Synth.Data.SongsProvider.GetInstance.ItemsLoaded += (totalSongs) => { SongChanged(); };
+                Synth.Data.SongsProvider.GetInstance.ItemClicked += (index) => { votingBehavior.OnSongChanged(); };
+                Synth.Data.SongsProvider.GetInstance.ItemsLoaded += (totalSongs) => { votingBehavior.OnSongChanged(); };
             }
-        }
-
-        private void SongChanged()
-        {
-            logger.Msg("SongChanged");
-            votingBehavior.RefreshVotes();
-            logger.Msg("-----------");
         }
     }
 }

@@ -24,9 +24,9 @@ namespace SRVoting
             this.synthriderzService = synthriderzService;
         }
 
-        public void RefreshVotes()
+        public void OnSongChanged()
         {
-            logger.Msg("Refreshing votes");
+            logger.Msg("Updating UI");
             StartCoroutine(UpdateVoteUI());
         }
 
@@ -49,6 +49,10 @@ namespace SRVoting
             logger.Msg("Song clicked; waiting for update");
             yield return new WaitForSeconds(0.1f);
 
+            logger.Msg("Make sure UI exists...");
+            yield return EnsureUIExists();
+
+            logger.Msg("Getting selected track...");
             var selectedTrack = Synth.SongSelection.SongSelectionManager.GetInstance?.SelectedGameTrack;
             string songName = selectedTrack?.TrackName ?? "";
             string songHash = selectedTrack?.LeaderboardHash ?? "";
@@ -56,23 +60,23 @@ namespace SRVoting
             bool canLeaderboard = selectedTrack?.CanUpdateLeaderboard ?? false;
             logger.Msg($"{songName} selected. IsCustom? {isCustom}. CanPostLeaderboards? {canLeaderboard}. Hash: {songHash}");
 
-            yield return synthriderzService.GetVotes(songHash, HandleGetVotesResponse);
-        }
+            GetVotesResponse getVotesResponse = null;
+            yield return synthriderzService.GetVotes(songHash, (response) => getVotesResponse = response);
 
-        private void HandleGetVotesResponse(GetVotesResponse response)
-        {
             logger.Msg("Successfully retrieved votes. Updating UI...");
 
-            EnsureArrowsExist();
+            logger.Msg("My vote: " + getVotesResponse?.MyVote);
 
-            logger.Msg("Done updating UI");            
+            // TODO
+
+            logger.Msg("Done updating UI");
         }
 
-        private void EnsureArrowsExist()
+        private IEnumerator EnsureUIExists()
         {
-            if (upArrow == null || downArrow == null)
+            if (upArrow == null || downArrow == null || upVoteCountText == null || downVoteCountText == null)
             {
-                logger.Msg("Initializing arrows...");
+                logger.Msg("Initializing UI...");
                 var rootGO = GameObject.Find("CentralPanel/Song Selection/VisibleWrap");
 
                 var controlsGO = rootGO.transform.Find("Controls");
@@ -94,8 +98,10 @@ namespace SRVoting
                 downArrow = CreateVoteArrow(downVoteContainer.transform, volumeRight, arrowDownName);
                 downVoteCountText = CreateVoteCountText(downVoteContainer.transform, downArrow, volumeText.gameObject);
 
-                logger.Msg("Done creating arrows");
+                logger.Msg("Done creating UI");
             }
+
+            yield return null;
         }
 
         private GameObject CreateVoteDirectionContainer(

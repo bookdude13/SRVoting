@@ -15,6 +15,8 @@ namespace SRVoting
         private SynthriderzService synthriderzService;
         private GameObject upArrow;
         private GameObject downArrow;
+        private TMPro.TMP_Text upVoteCountText;
+        private TMPro.TMP_Text downVoteCountText;
 
         public void Init(Util.ILogger logger, SynthriderzService synthriderzService)
         {
@@ -74,6 +76,7 @@ namespace SRVoting
                 var rootGO = GameObject.Find("CentralPanel/Song Selection/VisibleWrap");
 
                 var controlsGO = rootGO.transform.Find("Controls");
+                var volumeText = controlsGO.Find("MuteWrap/VALUE");
                 var volumeLeft = controlsGO.Find("MuteWrap/Arrow UP");
                 var volumeRight = controlsGO.Find("MuteWrap/Arrow Down");
 
@@ -83,22 +86,37 @@ namespace SRVoting
                 Transform customButton = difficultiesGO.Find("StandardButton - Custom");
 
                 // Create arrows
-                upArrow = CreateVoteArrowUI(selectedTrackGO, difficultiesGO, hardButton, volumeLeft, arrowUpName);
-                downArrow = CreateVoteArrowUI(selectedTrackGO, difficultiesGO, customButton, volumeRight, arrowDownName);
+                var upVoteContainer = CreateVoteDirectionContainer(selectedTrackGO, difficultiesGO, hardButton);
+                upArrow = CreateVoteArrow(upVoteContainer.transform, volumeLeft, arrowUpName);
+                upVoteCountText = CreateVoteCountText(upVoteContainer.transform, upArrow, volumeText.gameObject);
+
+                var downVoteContainer = CreateVoteDirectionContainer(selectedTrackGO, difficultiesGO, customButton);
+                downArrow = CreateVoteArrow(downVoteContainer.transform, volumeRight, arrowDownName);
+                downVoteCountText = CreateVoteCountText(downVoteContainer.transform, downArrow, volumeText.gameObject);
 
                 logger.Msg("Done creating arrows");
             }
         }
 
-        private GameObject CreateVoteArrowUI(Transform parent, Transform leftSideReference, Transform rightOffsetReference, Transform arrowToClone, string arrowName)
-        {
-            // Create container for new elements
+        private GameObject CreateVoteDirectionContainer(
+            Transform parent,
+            Transform leftSideReference,
+            Transform rightOffsetReference
+        ) {
             var voteContainer = new GameObject("srvoting_container");
             voteContainer.transform.SetParent(parent, false);
             voteContainer.transform.localPosition = leftSideReference.localPosition + rightOffsetReference.localPosition + new Vector3(2.0f, 0.0f, 0.0f);
             voteContainer.transform.localRotation = leftSideReference.localRotation;
 
-            // Clone arrow to actually vote
+            return voteContainer;
+        }
+
+        private GameObject CreateVoteArrow(
+            Transform voteContainer,
+            Transform arrowToClone,
+            string arrowName
+        ) {
+            // Clone arrow used to actually vote
             var voteArrow = GameObject.Instantiate(arrowToClone, voteContainer.transform);
             voteArrow.name = arrowName;
             voteArrow.localPosition = Vector3.zero;
@@ -117,8 +135,25 @@ namespace SRVoting
             voteArrow.gameObject.SetActive(true);
             buttonEvents.OnUse.AddListener((sender, e) => Vote( ((VRTK.VRTK_InteractableObject)sender).name ));
 
+            // Add current number of votes next to button
+
+
             logger.Msg($"Arrow {arrowName} added");
             return voteArrow.gameObject;
+        }
+
+        private TMPro.TMP_Text CreateVoteCountText(Transform voteContainer, GameObject voteArrow, GameObject textReference)
+        {
+            var voteCountText = GameObject.Instantiate(textReference, voteContainer);
+            voteCountText.name = voteArrow.name + "_text";
+            voteCountText.transform.localPosition = voteArrow.transform.localPosition + new Vector3(1.2f, 0.0f, 0.0f);
+            voteCountText.transform.localEulerAngles = textReference.transform.localEulerAngles;
+
+            var text = voteCountText.GetComponent<TMPro.TMP_Text>();
+            text?.SetText("#####");
+
+            logger.Msg("Text added");
+            return text;
         }
     }
 }

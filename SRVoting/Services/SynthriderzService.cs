@@ -1,5 +1,7 @@
-﻿using SRVoting.Util;
+﻿using SRVoting.Models;
+using SRVoting.Util;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -35,7 +37,7 @@ namespace SRVoting.Services
         /// Gets votes for song hash
         /// </summary>
         /// <param name="songHash">Song hash (saved as LeaderboardHash) to get votes for</param>
-        public IEnumerator<object> GetVotes(string songHash)
+        public IEnumerator GetVotes(string songHash, Action<GetVotesResponse> onSuccess)
         {
             if (steamAuthTicket == null)
             {
@@ -58,46 +60,30 @@ namespace SRVoting.Services
             }
             else
             {
-                if (www.responseCode >= 200 && www.responseCode <= 299)
+                var responseCode = www.responseCode;
+                
+                // We should never get null here, so if we do, blame the server
+                var responseRaw = www.downloadHandler.text;
+                if (responseRaw == null)
+                {
+                    responseCode = 500;
+                }
+
+                if (responseCode >= 200 && responseCode <= 299)
                 {
                     logger.Msg("Success!");
-                    logger.Msg(www.downloadHandler.text);
-                    /*                //              Plugin.log.Info(voteWWW.downloadHandler.text);
-                                    JObject node = JObject.Parse(voteWWW.downloadHandler.text);
-                                    //         Plugin.log.Info(((int)node["stats"]["upVotes"]).ToString() + " -- " + ((int)(node["stats"]["downVotes"])).ToString());
-                                    voteText.text = (((int)node["stats"]["upVotes"]) - ((int)node["stats"]["downVotes"])).ToString();
-                    */
-                    /*              if (upvote)
-                                  {
-                                      UpInteractable = false;
-                                      DownInteractable = true;
-                                  }
-                                  else
-                                  {
-                                      DownInteractable = false;
-                                      UpInteractable = true;
-                                  }
-                                  string lastlevelHash = SongCore.Utilities.Hashing.GetCustomLevelHash(_lastSong as CustomPreviewBeatmapLevel).ToLower();
-                                  if (!Plugin.votedSongs.ContainsKey(lastlevelHash))
-                                  {
-                                      Plugin.votedSongs.Add(lastlevelHash, new Plugin.SongVote(_lastBeatSaverSong.key, upvote ? Plugin.VoteType.Upvote : Plugin.VoteType.Downvote));
-                                      Plugin.WriteVotes();
-                                  }
-                                  else if (Plugin.votedSongs[lastlevelHash].voteType != (upvote ? Plugin.VoteType.Upvote : Plugin.VoteType.Downvote))
-                                  {
-                                      Plugin.votedSongs[lastlevelHash] = new Plugin.SongVote(_lastBeatSaverSong.key, upvote ? Plugin.VoteType.Upvote : Plugin.VoteType.Downvote);
-                                      Plugin.WriteVotes();
-                                  }*/
+                    logger.Msg(responseRaw);
+                    onSuccess(GetVotesResponse.FromJson(responseRaw));
                 }
                 else
                 {
-                    switch (www.responseCode)
+                    switch (responseCode)
                     {
                         case 500:
-                            logger.Msg("Server Error: " + www.downloadHandler.text);
+                            logger.Msg("Server Error: " + responseRaw);
                             break;
                         case 401:
-                            logger.Msg("Invalid auth ticket: " + www.downloadHandler.text);
+                            logger.Msg("Invalid auth ticket: " + responseRaw);
 
                             // Try to refresh for next attempts
                             steamAuth.GetAuthTicketAsync(ticket => {
@@ -106,16 +92,16 @@ namespace SRVoting.Services
                             });
                             break;
                         case 403:
-                            logger.Msg("Forbidden auth ticket: " + www.downloadHandler.text);
+                            logger.Msg("Forbidden auth ticket: " + responseRaw);
                             break;
                         case 404:
-                            logger.Msg("Map not found: " + www.downloadHandler.text);
+                            logger.Msg("Map not found: " + responseRaw);
                             break;
                         case 400:
-                            logger.Msg("Bad request: " + www.downloadHandler.text);
+                            logger.Msg("Bad request: " + responseRaw);
                             break;
                         default:
-                            logger.Msg("Other Error: " + www.downloadHandler.text);
+                            logger.Msg("Other Error: " + responseRaw);
                             break;
                     }
                 }

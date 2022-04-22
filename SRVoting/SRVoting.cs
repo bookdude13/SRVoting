@@ -14,8 +14,9 @@ namespace SRVoting
 {
     public class SRVoting : MelonMod
     {
-        private Util.ILogger logger;
+        private static Util.ILogger logger;
         private SynthriderzService synthriderzService;
+        private VotingMonoBehavior votingBehavior;
 
         public override void OnApplicationStart()
         {
@@ -39,18 +40,26 @@ namespace SRVoting
                 synthriderzService = new SynthriderzService(logger, steamAuthService);
             }
 
+
             if (scene.SceneType == SRScene.SRSceneType.MAIN_MENU)
             {
                 logger.Msg("MainMenu loaded, looking for vote buttons");
 
                 logger.Msg("Setting up voting mono behavior");
                 var votingGO = new GameObject("srvoting_main");
-                var votingBehavior = votingGO.AddComponent<VotingMonoBehavior>();
+                votingBehavior = votingGO.AddComponent<VotingMonoBehavior>();
                 votingBehavior.Init(logger, synthriderzService);
 
-                // TODO instead of this, do whenever the panel updates with Harmony, to catch first update
-                Synth.Data.SongsProvider.GetInstance.ItemClicked += (index) => { votingBehavior.RefreshVotes(); };
+                Synth.Data.SongsProvider.GetInstance.ItemClicked += (index) => { SongChanged(); };
+                Synth.Data.SongsProvider.GetInstance.ItemsLoaded += (totalSongs) => { SongChanged(); };
             }
+        }
+
+        private void SongChanged()
+        {
+            logger.Msg("SongChanged");
+            votingBehavior.RefreshVotes();
+            logger.Msg("-----------");
         }
     }
 }

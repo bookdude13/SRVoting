@@ -65,7 +65,7 @@ namespace SRVotingTests
     }
 }";
 
-            GetVotesResponse parsed = JsonConvert.DeserializeObject<GetVotesResponse>(json);
+            VotesResponseModel parsed = JsonConvert.DeserializeObject<VotesResponseModel>(json);
             Assert.IsNotNull(parsed);
             Assert.AreEqual(4747, parsed.EntityId);
             Assert.AreEqual("beatmap", parsed.EntityType);
@@ -147,7 +147,7 @@ namespace SRVotingTests
     }
         }";
 
-            GetVotesResponse parsed = JsonConvert.DeserializeObject<GetVotesResponse>(json);
+            VotesResponseModel parsed = JsonConvert.DeserializeObject<VotesResponseModel>(json);
             Assert.IsNotNull(parsed);
             Assert.AreEqual(34915, parsed.Id);
             Assert.AreEqual(1527, parsed.EntityId);

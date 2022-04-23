@@ -18,6 +18,9 @@ namespace SRVoting
         private TMPro.TMP_Text upVoteCountText;
         private TMPro.TMP_Text downVoteCountText;
 
+        private string currentSongHash = "";
+        private VoteState currentSongVote = VoteState.NO_VOTE;
+
         public void Init(Util.ILogger logger, SynthriderzService synthriderzService)
         {
             this.logger = logger;
@@ -32,10 +35,14 @@ namespace SRVoting
 
         private void Vote(string senderName)
         {
-            // TODO figure out up/down from sender. Handle same vote == remove vote.
-            /*string songHash = "TODO";
-            StartCoroutine(synthriderzService.Vote(songHash));*/
-            logger.Msg("Voting. Sender: " + senderName);
+            // Translate sender into up/down
+            VoteState newVote = senderName == arrowUpName ? VoteState.VOTED_UP : VoteState.VOTED_DOWN;
+
+            // If same as existing, "unvote", otherwise cast desired vote
+            VoteState voteToSend = newVote == currentSongVote ? VoteState.NO_VOTE : newVote;
+
+            logger.Msg($"Voting for song {currentSongHash}. Old: {currentSongVote}, New: {voteToSend}");
+            StartCoroutine(synthriderzService.Vote(currentSongHash, voteToSend, response => UpdateUI(response)));
         }
 
         private IEnumerator UpdateVoteUI()
@@ -59,10 +66,10 @@ namespace SRVoting
             logger.Msg("Getting selected track...");
             var selectedTrack = Synth.SongSelection.SongSelectionManager.GetInstance?.SelectedGameTrack;
             string songName = selectedTrack?.TrackName ?? "";
-            string songHash = selectedTrack?.LeaderboardHash ?? "";
+            currentSongHash = selectedTrack?.LeaderboardHash ?? "";
             bool isCustom = selectedTrack?.IsCustomSong ?? false;
             bool canLeaderboard = selectedTrack?.CanUpdateLeaderboard ?? false;
-            logger.Msg($"{songName} selected. IsCustom? {isCustom}. CanPostLeaderboards? {canLeaderboard}. Hash: {songHash}");
+            logger.Msg($"{songName} selected. IsCustom? {isCustom}. CanPostLeaderboards? {canLeaderboard}. Hash: {currentSongHash}");
 
             if (!isCustom)
             {
@@ -72,23 +79,27 @@ namespace SRVoting
             }
             else
             {
-                GetVotesResponse getVotesResponse = null;
-                yield return synthriderzService.GetVotes(songHash, (response) => getVotesResponse = response);
-
-                if (getVotesResponse == null)
-                {
-                    logger.Msg("No vote data, disabling arrows...");
-                    UpdateUIUp(false, false, "");
-                    UpdateUIDown(false, false, "");
-                }
-                else
-                {
-                    logger.Msg("Successfully retrieved votes. Updating UI...");
-                    UpdateUIUp(true, getVotesResponse.MyVote() == VoteState.VOTED_UP, string.Format("{0}", getVotesResponse.UpVoteCount));
-                    UpdateUIDown(true, getVotesResponse.MyVote() == VoteState.VOTED_DOWN, string.Format("{0}", getVotesResponse.DownVoteCount));
-                }
+                yield return synthriderzService.GetVotes(currentSongHash, response => UpdateUI(response));
 
                 logger.Msg("Done updating UI");
+            }
+        }
+
+        private void UpdateUI(VotesResponseModel getVotesResponse)
+        {
+            if (getVotesResponse == null)
+            {
+                logger.Msg("No vote data, disabling arrows...");
+                currentSongVote = VoteState.NO_VOTE;
+                UpdateUIUp(false, false, "");
+                UpdateUIDown(false, false, "");
+            }
+            else
+            {
+                logger.Msg("Updating UI with returned vote info...");
+                currentSongVote = getVotesResponse.MyVote();
+                UpdateUIUp(true, getVotesResponse.MyVote() == VoteState.VOTED_UP, string.Format("{0}", getVotesResponse.UpVoteCount));
+                UpdateUIDown(true, getVotesResponse.MyVote() == VoteState.VOTED_DOWN, string.Format("{0}", getVotesResponse.DownVoteCount));
             }
         }
 
@@ -173,7 +184,7 @@ namespace SRVoting
             buttonEvents.OnUse.SetPersistentListenerState(0, UnityEngine.Events.UnityEventCallState.Off);
 
             voteArrow.gameObject.SetActive(true);
-            buttonEvents.OnUse.AddListener((sender, e) => Vote( ((VRTK.VRTK_InteractableObject)sender).name ));
+            buttonEvents.OnUse.AddListener((sender, e) => Vote( ((VRTK.VRTK_InteractableObject)sender).name));
 
             logger.Msg($"Arrow {arrowName} added");
             return voteArrow.gameObject;

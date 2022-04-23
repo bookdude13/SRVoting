@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace SRVoting.Models
 {
-    public class GetVotesResponse
+    public class VotesResponseModel
     {
         [JsonProperty("id")]
         public int? Id { get; set; }
@@ -35,11 +35,11 @@ namespace SRVoting.Models
             return IsUpvote.Value ? VoteState.VOTED_UP : VoteState.VOTED_DOWN;
         }
 
-        public static GetVotesResponse FromJson(ILogger logger, string json)
+        public static VotesResponseModel FromJson(ILogger logger, string json)
         {
             try
             {
-                return JsonConvert.DeserializeObject<GetVotesResponse>(json);
+                return JsonConvert.DeserializeObject<VotesResponseModel>(json);
             }
             catch (Exception e)
             {

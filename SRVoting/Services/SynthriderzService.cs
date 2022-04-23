@@ -33,7 +33,7 @@ namespace SRVoting.Services
         /// Gets votes for song hash
         /// </summary>
         /// <param name="songHash">Song hash (saved as LeaderboardHash) to get votes for</param>
-        public IEnumerator GetVotes(string songHash, Action<GetVotesResponse> onSuccess)
+        public IEnumerator GetVotes(string songHash, Action<VotesResponseModel> onSuccess)
         {
             if (steamAuthTicket == null)
             {
@@ -45,7 +45,46 @@ namespace SRVoting.Services
             var safeTicket = Uri.EscapeDataString(steamAuthTicket);
 
             UnityWebRequest www = UnityWebRequest.Get($"{baseUrl}/votes/steam/{safeHash}?ticket={safeTicket}");
+            yield return DoVotesRequest(www, onSuccess);
+        }
 
+        public IEnumerator Vote(string songHash, VoteState vote, Action<VotesResponseModel> onSuccess)
+        {
+            if (steamAuthTicket == null)
+            {
+                logger.Msg("No ticket yet!");
+                yield return null;
+            }
+
+            var safeHash = Uri.EscapeDataString(songHash);
+            var safeTicket = Uri.EscapeDataString(steamAuthTicket);
+            int safeDirection = GetDirectionFromVoteState(vote);
+
+            UnityWebRequest www = UnityWebRequest.Post($"{baseUrl}/votes/steam/{safeHash}/{safeDirection}?ticket={safeTicket}", (string)null);
+            yield return DoVotesRequest(www, onSuccess);
+        }
+
+        private int GetDirectionFromVoteState(VoteState vote)
+        {
+            int direction;
+            if (vote == VoteState.VOTED_UP)
+            {
+                direction = 1;
+            }
+            else if (vote == VoteState.VOTED_DOWN)
+            {
+                direction = -1;
+            }
+            else
+            {
+                direction = 0;
+            }
+
+            return direction;
+        }
+
+        private IEnumerator DoVotesRequest(UnityWebRequest www, Action<VotesResponseModel> onSuccess)
+        {
             www.SetRequestHeader("User-Agent", userAgent);
             www.timeout = 10;
             yield return www.SendWebRequest();
@@ -57,7 +96,7 @@ namespace SRVoting.Services
             else
             {
                 var responseCode = www.responseCode;
-                
+
                 // We should never get null here, so if we do, blame the server
                 var responseRaw = www.downloadHandler.text;
                 if (responseRaw == null)
@@ -68,44 +107,44 @@ namespace SRVoting.Services
                 if (responseCode >= 200 && responseCode <= 299)
                 {
                     logger.Msg("Success!");
-                    onSuccess(GetVotesResponse.FromJson(logger, responseRaw));
+                    onSuccess(VotesResponseModel.FromJson(logger, responseRaw));
                 }
                 else
                 {
-                    switch (responseCode)
-                    {
-                        case 500:
-                            logger.Msg("Server Error: " + responseRaw);
-                            break;
-                        case 401:
-                            logger.Msg("Invalid auth ticket: " + responseRaw);
-
-                            // Try to refresh for next attempts
-                            steamAuth.GetAuthTicketAsync(ticket => {
-                                logger.Msg("Refreshed ticket: " + ticket);
-                                steamAuthTicket = ticket;
-                            });
-                            break;
-                        case 403:
-                            logger.Msg("Forbidden auth ticket: " + responseRaw);
-                            break;
-                        case 404:
-                            logger.Msg("Map not found");
-                            break;
-                        case 400:
-                            logger.Msg("Bad request: " + responseRaw);
-                            break;
-                        default:
-                            logger.Msg("Other Error: " + responseRaw);
-                            break;
-                    }
+                    HandleBadResponse(responseCode, responseRaw);
                 }
             }
         }
 
-        public IEnumerator Vote(string songHash)
+        private void HandleBadResponse(long responseCode, string responseRaw)
         {
-            yield return null;
+            switch (responseCode)
+            {
+                case 500:
+                    logger.Msg("Server Error: " + responseRaw);
+                    break;
+                case 401:
+                    logger.Msg("Invalid auth ticket: " + responseRaw);
+
+                    // Try to refresh for next attempts
+                    steamAuth.GetAuthTicketAsync(ticket => {
+                        logger.Msg("Refreshed ticket: " + ticket);
+                        steamAuthTicket = ticket;
+                    });
+                    break;
+                case 403:
+                    logger.Msg("Forbidden auth ticket: " + responseRaw);
+                    break;
+                case 404:
+                    logger.Msg("Map not found");
+                    break;
+                case 400:
+                    logger.Msg("Bad request: " + responseRaw);
+                    break;
+                default:
+                    logger.Msg("Other Error: " + responseRaw);
+                    break;
+            }
         }
     }
 }

@@ -1,6 +1,8 @@
 # SRVoting
 A Synth Riders mod for in-game up/down vote of custom songs hosted on [Synthriderz](https://synthriderz.com)
 
+![Voting UI](screenshot.jpg "Voting UI")
+
 ## Requirements
 - PCVR (Steam) version of Synth Riders. No modding support for standalone Oculus yet :/ I've tested on Oculus Quest 2 through Oculus Link, other headsets untested.
 - [Synthriderz](https://synthriderz.com) account

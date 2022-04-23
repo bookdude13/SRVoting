@@ -68,7 +68,6 @@ namespace SRVoting.Services
                 if (responseCode >= 200 && responseCode <= 299)
                 {
                     logger.Msg("Success!");
-                    logger.Msg(responseRaw);
                     onSuccess(GetVotesResponse.FromJson(logger, responseRaw));
                 }
                 else

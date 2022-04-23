@@ -95,12 +95,14 @@ namespace SRVoting
         private void UpdateUIUp(bool isActive, bool isMyVote, string text)
         {
             upVoteCountText.SetText(text);
+            upVoteCountText.fontStyle = isMyVote ? TMPro.FontStyles.Underline : TMPro.FontStyles.Normal;
             upArrow.SetActive(isActive);
         }
 
         private void UpdateUIDown(bool isActive, bool isMyVote, string text)
         {
             downVoteCountText.SetText(text);
+            downVoteCountText.fontStyle = isMyVote ? TMPro.FontStyles.Underline : TMPro.FontStyles.Normal;
             downArrow.SetActive(isActive);
         }
 

@@ -33,19 +33,25 @@ namespace SRVoting
             StartCoroutine(UpdateVoteUI());
         }
 
-        private void Vote(string senderName)
+        private void Vote(object sender, VRTK.InteractableObjectEventArgs e)
         {
-            // Translate sender into up/down
-            VoteState newVote = senderName == arrowUpName ? VoteState.VOTED_UP : VoteState.VOTED_DOWN;
+            string senderName = ((VRTK.VRTK_InteractableObject)sender).name;
+
+           // Translate sender into up/down
+           VoteState newVote = senderName == arrowUpName ? VoteState.VOTED_UP : VoteState.VOTED_DOWN;
 
             // If same as existing, "unvote", otherwise cast desired vote
             VoteState voteToSend = newVote == currentSongVote ? VoteState.NO_VOTE : newVote;
 
+            // Disable events until done voting
+            upArrow.GetComponent<VRTK_InteractableObject_UnityEvents>().OnUse.RemoveAllListeners();
+            downArrow.GetComponent<VRTK_InteractableObject_UnityEvents>().OnUse.RemoveAllListeners();
+            
             logger.Debug($"Voting for song {currentSongHash}. Old: {currentSongVote}, New: {voteToSend}");
             StartCoroutine(synthriderzService.Vote(
                 currentSongHash,
                 voteToSend,
-                response => UpdateUI(response),
+                response => HandleApiResponse(response),
                 errorMsg => HandleApiError(errorMsg))
             );
         }
@@ -64,10 +70,6 @@ namespace SRVoting
             logger.Debug("Make sure UI exists...");
             yield return EnsureUIExists();
 
-            // Disable UI until we get response, to avoid voting on other songs
-            UpdateUIUp(false, false, "");
-            UpdateUIDown(false, false, "");
-
             logger.Debug("Getting selected track...");
             var selectedTrack = Synth.SongSelection.SongSelectionManager.GetInstance?.SelectedGameTrack;
             string songName = selectedTrack?.TrackName ?? "";
@@ -85,7 +87,7 @@ namespace SRVoting
             {
                 yield return synthriderzService.GetVotes(
                     currentSongHash,
-                    response => UpdateUI(response),
+                    response => HandleApiResponse(response),
                     errorMsg => HandleApiError(errorMsg)
                 );
 
@@ -99,10 +101,10 @@ namespace SRVoting
 
             // Just hide the UI elements on error for now.
             // Eventually this could be error text or an error prompt
-            UpdateUI(null);
+            HandleApiResponse(null);
         }
 
-        private void UpdateUI(VotesResponseModel getVotesResponse)
+        private void HandleApiResponse(VotesResponseModel getVotesResponse)
         {
             if (getVotesResponse == null)
             {
@@ -125,6 +127,12 @@ namespace SRVoting
             upVoteCountText.SetText(text);
             upVoteCountText.fontStyle = isMyVote ? TMPro.FontStyles.Underline : TMPro.FontStyles.Normal;
             upArrow.SetActive(isActive);
+            if (isActive)
+            {
+                var arrowEvents = upArrow.GetComponent<VRTK_InteractableObject_UnityEvents>();
+                arrowEvents.OnUse.RemoveAllListeners();
+                arrowEvents.OnUse.AddListener(Vote);
+            }
         }
 
         private void UpdateUIDown(bool isActive, bool isMyVote, string text)
@@ -132,6 +140,12 @@ namespace SRVoting
             downVoteCountText.SetText(text);
             downVoteCountText.fontStyle = isMyVote ? TMPro.FontStyles.Underline : TMPro.FontStyles.Normal;
             downArrow.SetActive(isActive);
+            if (isActive)
+            {
+                var arrowEvents = downArrow.GetComponent<VRTK_InteractableObject_UnityEvents>();
+                arrowEvents.OnUse.RemoveAllListeners();
+                arrowEvents.OnUse.AddListener(Vote);
+            }
         }
 
         private IEnumerator EnsureUIExists()
@@ -201,7 +215,7 @@ namespace SRVoting
             buttonEvents.OnUse.SetPersistentListenerState(0, UnityEngine.Events.UnityEventCallState.Off);
 
             voteArrow.gameObject.SetActive(true);
-            buttonEvents.OnUse.AddListener((sender, e) => Vote( ((VRTK.VRTK_InteractableObject)sender).name));
+            buttonEvents.OnUse.AddListener(Vote);
 
             logger.Debug($"Arrow {arrowName} added");
             return voteArrow.gameObject;

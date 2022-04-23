@@ -33,7 +33,7 @@ namespace SRVoting.Services
         /// Gets votes for song hash
         /// </summary>
         /// <param name="songHash">Song hash (saved as LeaderboardHash) to get votes for</param>
-        public IEnumerator GetVotes(string songHash, Action<VotesResponseModel> onSuccess)
+        public IEnumerator GetVotes(string songHash, Action<VotesResponseModel> onSuccess, Action<string> onFail)
         {
             if (steamAuthTicket == null)
             {
@@ -45,10 +45,10 @@ namespace SRVoting.Services
             var safeTicket = Uri.EscapeDataString(steamAuthTicket);
 
             UnityWebRequest www = UnityWebRequest.Get($"{baseUrl}/votes/steam/{safeHash}?ticket={safeTicket}");
-            yield return DoVotesRequest(www, onSuccess);
+            yield return DoVotesRequest(www, onSuccess, onFail);
         }
 
-        public IEnumerator Vote(string songHash, VoteState vote, Action<VotesResponseModel> onSuccess)
+        public IEnumerator Vote(string songHash, VoteState vote, Action<VotesResponseModel> onSuccess, Action<string> onFail)
         {
             if (steamAuthTicket == null)
             {
@@ -61,7 +61,7 @@ namespace SRVoting.Services
             int safeDirection = GetDirectionFromVoteState(vote);
 
             UnityWebRequest www = UnityWebRequest.Post($"{baseUrl}/votes/steam/{safeHash}/{safeDirection}?ticket={safeTicket}", (string)null);
-            yield return DoVotesRequest(www, onSuccess);
+            yield return DoVotesRequest(www, onSuccess, onFail);
         }
 
         private int GetDirectionFromVoteState(VoteState vote)
@@ -83,15 +83,16 @@ namespace SRVoting.Services
             return direction;
         }
 
-        private IEnumerator DoVotesRequest(UnityWebRequest www, Action<VotesResponseModel> onSuccess)
+        private IEnumerator DoVotesRequest(UnityWebRequest www, Action<VotesResponseModel> onSuccess, Action<string> onFail)
         {
             www.SetRequestHeader("User-Agent", userAgent);
-            www.timeout = 10;
+            www.timeout = 5;
             yield return www.SendWebRequest();
 
             if (www.isNetworkError)
             {
                 logger.Msg("Error: " + www.error);
+                onFail(www.error);
             }
             else
             {
@@ -111,17 +112,18 @@ namespace SRVoting.Services
                 }
                 else
                 {
-                    HandleBadResponse(responseCode, responseRaw);
+                    HandleFailResponse(responseCode, responseRaw, onFail);
                 }
             }
         }
 
-        private void HandleBadResponse(long responseCode, string responseRaw)
+        private void HandleFailResponse(long responseCode, string responseRaw, Action<string> onFail)
         {
             switch (responseCode)
             {
                 case 500:
                     logger.Msg("Server Error: " + responseRaw);
+                    onFail("Server Error");
                     break;
                 case 401:
                     logger.Msg("Invalid auth ticket: " + responseRaw);
@@ -131,18 +133,24 @@ namespace SRVoting.Services
                         logger.Msg("Refreshed ticket: " + ticket);
                         steamAuthTicket = ticket;
                     });
+
+                    onFail("Authentication problem\nPlease try again");
                     break;
                 case 403:
                     logger.Msg("Forbidden auth ticket: " + responseRaw);
+                    onFail("Forbidden");
                     break;
                 case 404:
                     logger.Msg("Map not found");
+                    onFail("Map not found on Synthriderz\nUnpublished draft?");
                     break;
                 case 400:
                     logger.Msg("Bad request: " + responseRaw);
+                    onFail("Bad request");
                     break;
                 default:
                     logger.Msg("Other Error: " + responseRaw);
+                    onFail("Error");
                     break;
             }
         }

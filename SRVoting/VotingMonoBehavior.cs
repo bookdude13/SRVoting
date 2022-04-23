@@ -42,7 +42,12 @@ namespace SRVoting
             VoteState voteToSend = newVote == currentSongVote ? VoteState.NO_VOTE : newVote;
 
             logger.Msg($"Voting for song {currentSongHash}. Old: {currentSongVote}, New: {voteToSend}");
-            StartCoroutine(synthriderzService.Vote(currentSongHash, voteToSend, response => UpdateUI(response)));
+            StartCoroutine(synthriderzService.Vote(
+                currentSongHash,
+                voteToSend,
+                response => UpdateUI(response),
+                errorMsg => HandleApiError(errorMsg))
+            );
         }
 
         private IEnumerator UpdateVoteUI()
@@ -79,10 +84,23 @@ namespace SRVoting
             }
             else
             {
-                yield return synthriderzService.GetVotes(currentSongHash, response => UpdateUI(response));
+                yield return synthriderzService.GetVotes(
+                    currentSongHash,
+                    response => UpdateUI(response),
+                    errorMsg => HandleApiError(errorMsg)
+                );
 
                 logger.Msg("Done updating UI");
             }
+        }
+
+        private void HandleApiError(string errorMessage)
+        {
+            logger.Msg(errorMessage);
+
+            // Just hide the UI elements on error for now.
+            // Eventually this could be error text or an error prompt
+            UpdateUI(null);
         }
 
         private void UpdateUI(VotesResponseModel getVotesResponse)

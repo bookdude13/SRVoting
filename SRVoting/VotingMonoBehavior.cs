@@ -29,7 +29,7 @@ namespace SRVoting
 
         public void OnSongChanged()
         {
-            logger.Msg("Updating UI");
+            logger.Debug("Song changed. Updating UI");
             StartCoroutine(UpdateVoteUI());
         }
 
@@ -41,7 +41,7 @@ namespace SRVoting
             // If same as existing, "unvote", otherwise cast desired vote
             VoteState voteToSend = newVote == currentSongVote ? VoteState.NO_VOTE : newVote;
 
-            logger.Msg($"Voting for song {currentSongHash}. Old: {currentSongVote}, New: {voteToSend}");
+            logger.Debug($"Voting for song {currentSongHash}. Old: {currentSongVote}, New: {voteToSend}");
             StartCoroutine(synthriderzService.Vote(
                 currentSongHash,
                 voteToSend,
@@ -58,23 +58,22 @@ namespace SRVoting
                 yield return null;
             }
 
-            logger.Msg("Song clicked; waiting for update");
+            logger.Debug("Song clicked; waiting for update");
             yield return new WaitForSeconds(0.01f);
 
-            logger.Msg("Make sure UI exists...");
+            logger.Debug("Make sure UI exists...");
             yield return EnsureUIExists();
 
             // Disable UI until we get response, to avoid voting on other songs
             UpdateUIUp(false, false, "");
             UpdateUIDown(false, false, "");
 
-            logger.Msg("Getting selected track...");
+            logger.Debug("Getting selected track...");
             var selectedTrack = Synth.SongSelection.SongSelectionManager.GetInstance?.SelectedGameTrack;
             string songName = selectedTrack?.TrackName ?? "";
             currentSongHash = selectedTrack?.LeaderboardHash ?? "";
             bool isCustom = selectedTrack?.IsCustomSong ?? false;
-            bool canLeaderboard = selectedTrack?.CanUpdateLeaderboard ?? false;
-            logger.Msg($"{songName} selected. IsCustom? {isCustom}. CanPostLeaderboards? {canLeaderboard}. Hash: {currentSongHash}");
+            logger.Msg($"{songName} selected. IsCustom? {isCustom}. Hash: {currentSongHash}");
 
             if (!isCustom)
             {
@@ -90,7 +89,7 @@ namespace SRVoting
                     errorMsg => HandleApiError(errorMsg)
                 );
 
-                logger.Msg("Done updating UI");
+                logger.Debug("Done updating UI");
             }
         }
 
@@ -107,14 +106,14 @@ namespace SRVoting
         {
             if (getVotesResponse == null)
             {
-                logger.Msg("No vote data, disabling arrows...");
+                logger.Debug("No vote data, disabling arrows...");
                 currentSongVote = VoteState.NO_VOTE;
                 UpdateUIUp(false, false, "");
                 UpdateUIDown(false, false, "");
             }
             else
             {
-                logger.Msg("Updating UI with returned vote info...");
+                logger.Debug("Updating UI with returned vote info...");
                 currentSongVote = getVotesResponse.MyVote();
                 UpdateUIUp(true, getVotesResponse.MyVote() == VoteState.VOTED_UP, string.Format("{0}", getVotesResponse.UpVoteCount));
                 UpdateUIDown(true, getVotesResponse.MyVote() == VoteState.VOTED_DOWN, string.Format("{0}", getVotesResponse.DownVoteCount));
@@ -204,7 +203,7 @@ namespace SRVoting
             voteArrow.gameObject.SetActive(true);
             buttonEvents.OnUse.AddListener((sender, e) => Vote( ((VRTK.VRTK_InteractableObject)sender).name));
 
-            logger.Msg($"Arrow {arrowName} added");
+            logger.Debug($"Arrow {arrowName} added");
             return voteArrow.gameObject;
         }
 
@@ -219,7 +218,7 @@ namespace SRVoting
             text.SetText("#####");
             text.alignment = TMPro.TextAlignmentOptions.Left;
 
-            logger.Msg("Text added");
+            logger.Debug("Text added");
             return text;
         }
     }

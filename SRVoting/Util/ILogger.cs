@@ -9,5 +9,6 @@ namespace SRVoting.Util
     public interface ILogger
     {
         void Msg(string message);
+        void Debug(string message);
     }
 }

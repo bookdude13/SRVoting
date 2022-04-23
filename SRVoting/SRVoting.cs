@@ -43,9 +43,9 @@ namespace SRVoting
 
             if (scene.SceneType == SRScene.SRSceneType.MAIN_MENU)
             {
-                logger.Msg("MainMenu loaded, looking for vote buttons");
+                logger.Debug("MainMenu loaded, looking for vote buttons");
+                logger.Debug("Setting up voting mono behavior");
 
-                logger.Msg("Setting up voting mono behavior");
                 var votingGO = new GameObject("srvoting_main");
                 votingBehavior = votingGO.AddComponent<VotingMonoBehavior>();
                 votingBehavior.Init(logger, synthriderzService);

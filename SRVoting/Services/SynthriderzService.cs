@@ -16,15 +16,13 @@ namespace SRVoting.Services
         private SteamAuthService steamAuth;
         private string steamAuthTicket = null;
 
-        // TODO cache ticket within the auth service and refresh if needed (add RefreshTicket() call?)
-
         public SynthriderzService(ILogger logger, SteamAuthService steamAuth)
         {
             this.logger = logger;
             this.steamAuth = steamAuth;
 
             steamAuth.GetAuthTicketAsync(ticket => {
-                logger.Msg("Ticket: " + ticket);
+                logger.Debug("Ticket: " + ticket);
                 steamAuthTicket = ticket;
             });
         }
@@ -107,7 +105,7 @@ namespace SRVoting.Services
 
                 if (responseCode >= 200 && responseCode <= 299)
                 {
-                    logger.Msg("Success!");
+                    logger.Debug("Success!");
                     onSuccess(VotesResponseModel.FromJson(logger, responseRaw));
                 }
                 else

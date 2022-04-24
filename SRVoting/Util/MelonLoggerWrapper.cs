@@ -9,13 +9,17 @@ namespace SRVoting.Util
 {
     public class MelonLoggerWrapper : ILogger
     {
-        private readonly MelonLogger.Instance melonLogger;
-        private bool isDebug;
+#if DEBUG
+        private readonly bool isDebug = true;
+#else
+        private readonly bool isDebug = false;
+#endif
 
-        public MelonLoggerWrapper(MelonLogger.Instance melonLogger, bool isDebug = false)
+        private readonly MelonLogger.Instance melonLogger;
+
+        public MelonLoggerWrapper(MelonLogger.Instance melonLogger)
         {
             this.melonLogger = melonLogger;
-            this.isDebug = isDebug;
         }
 
         public void Msg(string message)

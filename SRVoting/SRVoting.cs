@@ -22,7 +22,7 @@ namespace SRVoting
         {
             base.OnApplicationStart();
 
-            logger = new MelonLoggerWrapper(LoggerInstance, false);
+            logger = new MelonLoggerWrapper(LoggerInstance);
         }
 
         public override void OnSceneWasInitialized(int buildIndex, string sceneName)

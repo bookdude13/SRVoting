@@ -82,6 +82,7 @@
     <Compile Include="Services\SynthriderzService.cs" />
     <Compile Include="SRVoting.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UI\VoteDirectionComponent.cs" />
     <Compile Include="Util\ILogger.cs" />
     <Compile Include="Util\MelonLoggerWrapper.cs" />
     <Compile Include="Util\SRScene.cs" />

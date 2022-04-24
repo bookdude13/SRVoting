@@ -1,9 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using SRVoting.Util;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UI;
 using VRTK.UnityEventHelper;
 
 namespace SRVoting.UI
@@ -13,6 +15,7 @@ namespace SRVoting.UI
         private Util.ILogger logger;
         private UnityAction<object, VRTK.InteractableObjectEventArgs> onArrowUse;
         private GameObject arrow;
+        private VRTK_InteractableObject_UnityEvents arrowEvents;
         private TMPro.TMP_Text countText;
 
         public string ArrowName { get; private set; }
@@ -28,19 +31,36 @@ namespace SRVoting.UI
 
         public void DisableEvents()
         {
-            arrow.GetComponent<VRTK_InteractableObject_UnityEvents>().OnUse.RemoveAllListeners();
+            arrowEvents?.OnUse?.RemoveAllListeners();
         }
 
         public void UpdateUI(bool isActive, bool isMyVote, string text)
         {
             countText.SetText(text);
-            countText.fontStyle = isMyVote ? TMPro.FontStyles.Underline : TMPro.FontStyles.Normal;
-            arrow.SetActive(isActive);
+
+            if (isMyVote)
+            {
+                countText.fontStyle = TMPro.FontStyles.Underline;
+                countText.color = Color.white;
+            }
+            else
+            {
+                countText.fontStyle = TMPro.FontStyles.Normal;
+                countText.color = new Color(0.4f, 0.4f, 0.4f, 1.0f);
+            }
+
             if (isActive)
             {
-                var arrowEvents = arrow.GetComponent<VRTK_InteractableObject_UnityEvents>();
                 arrowEvents.OnUse.RemoveAllListeners();
                 arrowEvents.OnUse.AddListener(onArrowUse);
+
+                arrow.GetComponent<Synth.Utils.VRTKButtonHelper>().SetActive();
+            }
+            else
+            {
+                arrowEvents.OnUse.RemoveAllListeners();
+
+                arrow.GetComponent<Synth.Utils.VRTKButtonHelper>().SetInactive();
             }
         }
 
@@ -61,6 +81,7 @@ namespace SRVoting.UI
 
             var container = CreateVoteDirectionContainer(parent, leftSideReference, rightOffsetReference);
             arrow = CreateVoteArrow(container.transform, arrowToClone);
+            arrowEvents = arrow.GetComponent<VRTK_InteractableObject_UnityEvents>();
             countText = CreateVoteCountText(container.transform, arrow, textReference);
         }
 
@@ -94,7 +115,7 @@ namespace SRVoting.UI
             // See https://forum.unity.com/threads/documentation-unityevent-removealllisteners-only-removes-non-persistent-listeners.341796/
             // After trial and error, the one at index 0 controls volume still and needs to be disabled.
             // The one at index 1 still needs to stick around to handle new events
-            buttonEvents.OnUse.SetPersistentListenerState(0, UnityEngine.Events.UnityEventCallState.Off);
+            buttonEvents.OnUse.SetPersistentListenerState(0, UnityEventCallState.Off);
 
             voteArrow.gameObject.SetActive(true);
             buttonEvents.OnUse.AddListener(onArrowUse);

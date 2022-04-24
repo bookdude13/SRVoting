@@ -84,11 +84,15 @@ namespace SRVoting
                 yield return null;
             }
 
-            logger.Debug("Song clicked; waiting for update");
-            yield return new WaitForSeconds(0.01f);
-
             logger.Debug("Make sure UI exists...");
             yield return EnsureUIExists();
+
+            // Start disabled while we wait for everything
+            upVoteComponent.UpdateUI(false, false, "");
+            downVoteComponent.UpdateUI(false, false, "");
+
+            logger.Debug("Song clicked; waiting for update");
+            yield return new WaitForSeconds(0.01f);
 
             logger.Debug("Getting selected track...");
             var selectedTrack = Synth.SongSelection.SongSelectionManager.GetInstance?.SelectedGameTrack;
@@ -99,12 +103,10 @@ namespace SRVoting
 
             if (!isCustom)
             {
-                logger.Msg("Not showing votes for OST");
-                upVoteComponent.UpdateUI(false, false, "");
-                downVoteComponent.UpdateUI(false, false, "");
+                upVoteComponent.UpdateUI(false, false, "N/A");
+                downVoteComponent.UpdateUI(false, false, "N/A");
             }
-            else
-            {
+            else {
                 VotesResponseModel getVotesResponse = null;
                 string errorMessage = null;
                 yield return synthriderzService.GetVotes(

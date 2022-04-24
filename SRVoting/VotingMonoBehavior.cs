@@ -48,12 +48,29 @@ namespace SRVoting
             downArrow.GetComponent<VRTK_InteractableObject_UnityEvents>().OnUse.RemoveAllListeners();
             
             logger.Debug($"Voting for song {currentSongHash}. Old: {currentSongVote}, New: {voteToSend}");
-            StartCoroutine(synthriderzService.Vote(
+            StartCoroutine(VoteAndUpdateUI(voteToSend));
+        }
+
+        private IEnumerator VoteAndUpdateUI(VoteState vote)
+        {
+            VotesResponseModel getVotesResponse = null;
+            string errorMessage = null;
+
+            yield return synthriderzService.Vote(
                 currentSongHash,
-                voteToSend,
-                response => HandleApiResponse(response),
-                errorMsg => HandleApiError(errorMsg))
+                vote,
+                response => getVotesResponse = response,
+                errorMsg => errorMessage = errorMsg
             );
+
+            if (errorMessage != null)
+            {
+                HandleApiError(errorMessage);
+            }
+            else
+            {
+                HandleApiResponse(getVotesResponse);
+            }
         }
 
         private IEnumerator UpdateVoteUI()
@@ -85,11 +102,22 @@ namespace SRVoting
             }
             else
             {
+                VotesResponseModel getVotesResponse = null;
+                string errorMessage = null;
                 yield return synthriderzService.GetVotes(
                     currentSongHash,
-                    response => HandleApiResponse(response),
-                    errorMsg => HandleApiError(errorMsg)
+                    response => getVotesResponse = response,
+                    errorMsg => errorMessage = errorMsg
                 );
+
+                if (errorMessage != null)
+                {
+                    HandleApiError(errorMessage);
+                }
+                else
+                {
+                    HandleApiResponse(getVotesResponse);
+                }
 
                 logger.Debug("Done updating UI");
             }

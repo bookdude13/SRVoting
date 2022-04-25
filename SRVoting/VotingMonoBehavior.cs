@@ -28,11 +28,13 @@ namespace SRVoting
 
             upVoteComponent = new VoteDirectionComponent(logger, arrowUpName, Vote);
             downVoteComponent = new VoteDirectionComponent(logger, arrowDownName, Vote);
+
+            StartCoroutine(EnsureUIExists());
         }
 
-        public void OnSongChanged()
+        public void Refresh()
         {
-            logger.Debug("Song changed. Updating UI");
+            logger.Debug("Refreshing UI");
             StartCoroutine(UpdateVoteUI());
         }
 

@@ -1,5 +1,5 @@
 
-set BUILT_VERSION="1.0.0"
+set BUILT_VERSION="1.1.0"
 set PROJECT_NAME="SRVoting"
 
 set RELEASE_BUILD_DIR=".\%PROJECT_NAME%\bin\Release"

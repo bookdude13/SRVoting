@@ -22,7 +22,7 @@ namespace SRVoting
         {
             base.OnApplicationStart();
 
-            logger = new MelonLoggerWrapper(LoggerInstance, false);
+            logger = new MelonLoggerWrapper(LoggerInstance);
         }
 
         public override void OnSceneWasInitialized(int buildIndex, string sceneName)
@@ -50,8 +50,11 @@ namespace SRVoting
                 votingBehavior = votingGO.AddComponent<VotingMonoBehavior>();
                 votingBehavior.Init(logger, synthriderzService);
 
-                Synth.Data.SongsProvider.GetInstance.ItemClicked += (index) => { votingBehavior.OnSongChanged(); };
-                Synth.Data.SongsProvider.GetInstance.ItemsLoaded += (totalSongs) => { votingBehavior.OnSongChanged(); };
+                Synth.Data.SongsProvider.GetInstance.ItemClicked += (index) => { votingBehavior.Refresh(); };
+                Synth.Data.SongsProvider.GetInstance.ItemsLoaded += (totalSongs) => { votingBehavior.Refresh(); };
+
+                // Refresh right away to catch the case when returning from a song
+                votingBehavior.Refresh();
             }
         }
     }

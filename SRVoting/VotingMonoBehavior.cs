@@ -1,5 +1,6 @@
 ﻿using SRVoting.Models;
 using SRVoting.Services;
+using SRVoting.UI;
 using System.Collections;
 using UnityEngine;
 using VRTK.UnityEventHelper;
@@ -13,10 +14,9 @@ namespace SRVoting
 
         private Util.ILogger logger;
         private SynthriderzService synthriderzService;
-        private GameObject upArrow;
-        private GameObject downArrow;
-        private TMPro.TMP_Text upVoteCountText;
-        private TMPro.TMP_Text downVoteCountText;
+
+        private VoteDirectionComponent upVoteComponent;
+        private VoteDirectionComponent downVoteComponent;
 
         private string currentSongHash = "";
         private VoteState currentSongVote = VoteState.NO_VOTE;
@@ -25,11 +25,16 @@ namespace SRVoting
         {
             this.logger = logger;
             this.synthriderzService = synthriderzService;
+
+            upVoteComponent = new VoteDirectionComponent(logger, arrowUpName, Vote);
+            downVoteComponent = new VoteDirectionComponent(logger, arrowDownName, Vote);
+
+            StartCoroutine(EnsureUIExists());
         }
 
-        public void OnSongChanged()
+        public void Refresh()
         {
-            logger.Debug("Song changed. Updating UI");
+            logger.Debug("Refreshing UI");
             StartCoroutine(UpdateVoteUI());
         }
 
@@ -37,23 +42,40 @@ namespace SRVoting
         {
             string senderName = ((VRTK.VRTK_InteractableObject)sender).name;
 
-           // Translate sender into up/down
-           VoteState newVote = senderName == arrowUpName ? VoteState.VOTED_UP : VoteState.VOTED_DOWN;
+            // Translate sender into up/down
+            VoteState newVote = senderName == arrowUpName ? VoteState.VOTED_UP : VoteState.VOTED_DOWN;
 
             // If same as existing, "unvote", otherwise cast desired vote
             VoteState voteToSend = newVote == currentSongVote ? VoteState.NO_VOTE : newVote;
 
             // Disable events until done voting
-            upArrow.GetComponent<VRTK_InteractableObject_UnityEvents>().OnUse.RemoveAllListeners();
-            downArrow.GetComponent<VRTK_InteractableObject_UnityEvents>().OnUse.RemoveAllListeners();
+            upVoteComponent.DisableEvents();
+            downVoteComponent.DisableEvents();
             
             logger.Debug($"Voting for song {currentSongHash}. Old: {currentSongVote}, New: {voteToSend}");
-            StartCoroutine(synthriderzService.Vote(
+            StartCoroutine(VoteAndUpdateUI(voteToSend));
+        }
+
+        private IEnumerator VoteAndUpdateUI(VoteState vote)
+        {
+            VotesResponseModel getVotesResponse = null;
+            string errorMessage = null;
+
+            yield return synthriderzService.Vote(
                 currentSongHash,
-                voteToSend,
-                response => HandleApiResponse(response),
-                errorMsg => HandleApiError(errorMsg))
+                vote,
+                response => getVotesResponse = response,
+                errorMsg => errorMessage = errorMsg
             );
+
+            if (errorMessage != null)
+            {
+                HandleApiError(errorMessage);
+            }
+            else
+            {
+                HandleApiResponse(getVotesResponse);
+            }
         }
 
         private IEnumerator UpdateVoteUI()
@@ -64,11 +86,15 @@ namespace SRVoting
                 yield return null;
             }
 
-            logger.Debug("Song clicked; waiting for update");
-            yield return new WaitForSeconds(0.01f);
-
             logger.Debug("Make sure UI exists...");
             yield return EnsureUIExists();
+
+            // Start disabled while we wait for everything
+            upVoteComponent.UpdateUI(false, false, "");
+            downVoteComponent.UpdateUI(false, false, "");
+
+            logger.Debug("Song clicked; waiting for update");
+            yield return new WaitForSeconds(0.01f);
 
             logger.Debug("Getting selected track...");
             var selectedTrack = Synth.SongSelection.SongSelectionManager.GetInstance?.SelectedGameTrack;
@@ -79,17 +105,26 @@ namespace SRVoting
 
             if (!isCustom)
             {
-                logger.Msg("Not showing votes for OST");
-                UpdateUIUp(false, false, "");
-                UpdateUIDown(false, false, "");
+                upVoteComponent.UpdateUI(false, false, "N/A");
+                downVoteComponent.UpdateUI(false, false, "N/A");
             }
-            else
-            {
+            else {
+                VotesResponseModel getVotesResponse = null;
+                string errorMessage = null;
                 yield return synthriderzService.GetVotes(
                     currentSongHash,
-                    response => HandleApiResponse(response),
-                    errorMsg => HandleApiError(errorMsg)
+                    response => getVotesResponse = response,
+                    errorMsg => errorMessage = errorMsg
                 );
+
+                if (errorMessage != null)
+                {
+                    HandleApiError(errorMessage);
+                }
+                else
+                {
+                    HandleApiResponse(getVotesResponse);
+                }
 
                 logger.Debug("Done updating UI");
             }
@@ -110,49 +145,33 @@ namespace SRVoting
             {
                 logger.Debug("No vote data, disabling arrows...");
                 currentSongVote = VoteState.NO_VOTE;
-                UpdateUIUp(false, false, "");
-                UpdateUIDown(false, false, "");
+                upVoteComponent.UpdateUI(false, false, "");
+                downVoteComponent.UpdateUI(false, false, "");
             }
             else
             {
                 logger.Debug("Updating UI with returned vote info...");
                 currentSongVote = getVotesResponse.MyVote();
-                UpdateUIUp(true, getVotesResponse.MyVote() == VoteState.VOTED_UP, string.Format("{0}", getVotesResponse.UpVoteCount));
-                UpdateUIDown(true, getVotesResponse.MyVote() == VoteState.VOTED_DOWN, string.Format("{0}", getVotesResponse.DownVoteCount));
-            }
-        }
-
-        private void UpdateUIUp(bool isActive, bool isMyVote, string text)
-        {
-            upVoteCountText.SetText(text);
-            upVoteCountText.fontStyle = isMyVote ? TMPro.FontStyles.Underline : TMPro.FontStyles.Normal;
-            upArrow.SetActive(isActive);
-            if (isActive)
-            {
-                var arrowEvents = upArrow.GetComponent<VRTK_InteractableObject_UnityEvents>();
-                arrowEvents.OnUse.RemoveAllListeners();
-                arrowEvents.OnUse.AddListener(Vote);
-            }
-        }
-
-        private void UpdateUIDown(bool isActive, bool isMyVote, string text)
-        {
-            downVoteCountText.SetText(text);
-            downVoteCountText.fontStyle = isMyVote ? TMPro.FontStyles.Underline : TMPro.FontStyles.Normal;
-            downArrow.SetActive(isActive);
-            if (isActive)
-            {
-                var arrowEvents = downArrow.GetComponent<VRTK_InteractableObject_UnityEvents>();
-                arrowEvents.OnUse.RemoveAllListeners();
-                arrowEvents.OnUse.AddListener(Vote);
+                upVoteComponent.UpdateUI(
+                    true,
+                    getVotesResponse.MyVote() == VoteState.VOTED_UP,
+                    string.Format("{0}", getVotesResponse.UpVoteCount)
+                );
+                downVoteComponent.UpdateUI(
+                    true,
+                    getVotesResponse.MyVote() == VoteState.VOTED_DOWN,
+                    string.Format("{0}", getVotesResponse.DownVoteCount)
+                );
             }
         }
 
         private IEnumerator EnsureUIExists()
         {
-            if (upArrow == null || downArrow == null || upVoteCountText == null || downVoteCountText == null)
+            if (!upVoteComponent.IsUiCreated || !downVoteComponent.IsUiCreated)
             {
                 logger.Msg("Initializing UI...");
+
+                // Find existing pieces
                 var rootGO = GameObject.Find("CentralPanel/Song Selection/VisibleWrap");
 
                 var controlsGO = rootGO.transform.Find("Controls");
@@ -165,75 +184,14 @@ namespace SRVoting
                 Transform hardButton = difficultiesGO.Find("StandardButton - Hard");
                 Transform customButton = difficultiesGO.Find("StandardButton - Custom");
 
-                // Create arrows
-                var upVoteContainer = CreateVoteDirectionContainer(selectedTrackGO, difficultiesGO, hardButton);
-                upArrow = CreateVoteArrow(upVoteContainer.transform, volumeLeft, arrowUpName);
-                upVoteCountText = CreateVoteCountText(upVoteContainer.transform, upArrow, volumeText.gameObject);
-
-                var downVoteContainer = CreateVoteDirectionContainer(selectedTrackGO, difficultiesGO, customButton);
-                downArrow = CreateVoteArrow(downVoteContainer.transform, volumeRight, arrowDownName);
-                downVoteCountText = CreateVoteCountText(downVoteContainer.transform, downArrow, volumeText.gameObject);
+                // Create new pieces
+                upVoteComponent.CreateUI(selectedTrackGO, difficultiesGO, hardButton, volumeLeft, volumeText.gameObject);
+                downVoteComponent.CreateUI(selectedTrackGO, difficultiesGO, customButton, volumeRight, volumeText.gameObject);
 
                 logger.Msg("Done creating UI");
             }
 
             yield return null;
-        }
-
-        private GameObject CreateVoteDirectionContainer(
-            Transform parent,
-            Transform leftSideReference,
-            Transform rightOffsetReference
-        ) {
-            var voteContainer = new GameObject("srvoting_container");
-            voteContainer.transform.SetParent(parent, false);
-            voteContainer.transform.localPosition = leftSideReference.localPosition + rightOffsetReference.localPosition + new Vector3(2.0f, 0.0f, 0.0f);
-            voteContainer.transform.localRotation = leftSideReference.localRotation;
-
-            return voteContainer;
-        }
-
-        private GameObject CreateVoteArrow(
-            Transform voteContainer,
-            Transform arrowToClone,
-            string arrowName
-        ) {
-            // Clone arrow used to actually vote
-            var voteArrow = GameObject.Instantiate(arrowToClone, voteContainer.transform);
-            voteArrow.name = arrowName;
-            voteArrow.localPosition = Vector3.zero;
-            voteArrow.localEulerAngles = arrowToClone.localEulerAngles + new Vector3(0f, 0f, 90f);
-
-            // Replace button event
-            var buttonEvents = voteArrow.GetComponent<VRTK_InteractableObject_UnityEvents>();
-            buttonEvents.OnUse.RemoveAllListeners();
-
-            // 2 persistent listeners not removed by RemoveAllListeners() exist
-            // See https://forum.unity.com/threads/documentation-unityevent-removealllisteners-only-removes-non-persistent-listeners.341796/
-            // After trial and error, the one at index 0 controls volume still and needs to be disabled.
-            // The one at index 1 still needs to stick around to handle new events
-            buttonEvents.OnUse.SetPersistentListenerState(0, UnityEngine.Events.UnityEventCallState.Off);
-
-            voteArrow.gameObject.SetActive(true);
-            buttonEvents.OnUse.AddListener(Vote);
-
-            logger.Debug($"Arrow {arrowName} added");
-            return voteArrow.gameObject;
-        }
-
-        private TMPro.TMP_Text CreateVoteCountText(Transform voteContainer, GameObject voteArrow, GameObject textReference)
-        {
-            var voteCountText = GameObject.Instantiate(textReference, voteContainer);
-            voteCountText.name = voteArrow.name + "_text";
-            voteCountText.transform.localPosition = voteArrow.transform.localPosition + new Vector3(1.2f, 0.0f, 0.0f);
-            voteCountText.transform.eulerAngles = textReference.transform.eulerAngles;
-
-            var text = voteCountText.GetComponent<TMPro.TMP_Text>();
-            text.SetText("#####");
-            text.alignment = TMPro.TextAlignmentOptions.Left;
-
-            logger.Debug("Text added");
-            return text;
         }
     }
 }

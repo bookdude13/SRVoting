@@ -92,7 +92,9 @@
     <Folder Include="Harmony\" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="libs\SRModCore.dll" />
+    <Content Include="libs\SRModCore.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -1,5 +1,5 @@
 ﻿using Newtonsoft.Json;
-using SRVoting.Util;
+using SRModCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -35,7 +35,7 @@ namespace SRVoting.Models
             return IsUpvote.Value ? VoteState.VOTED_UP : VoteState.VOTED_DOWN;
         }
 
-        public static VotesResponseModel FromJson(ILogger logger, string json)
+        public static VotesResponseModel FromJson(SRLogger logger, string json)
         {
             try
             {

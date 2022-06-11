@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using SRVoting.Util;
+using SRModCore;
 using Steamworks;
 
 namespace SRVoting.Services
@@ -13,13 +13,13 @@ namespace SRVoting.Services
     {
         private readonly int STEAM_MANAGER_WAIT_MS = 500;
 
-        private ILogger logger;
+        private SRLogger logger;
         private AppId_t appId;
         private HAuthTicket lastTicket;
         private EResult lastTicketResult;
         private Callback<GetAuthSessionTicketResponse_t> m_GetAuthSessionTicketResponse;
 
-        public SteamAuthService(ILogger logger)
+        public SteamAuthService(SRLogger logger)
         {
             this.logger = logger;
             appId = SteamUtils.GetAppID(); // 885000

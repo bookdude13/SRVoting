@@ -1,4 +1,5 @@
-﻿using SRVoting.Models;
+﻿using SRModCore;
+using SRVoting.Models;
 using SRVoting.Services;
 using SRVoting.UI;
 using System.Collections;
@@ -12,7 +13,7 @@ namespace SRVoting
         private readonly string arrowUpName = "srvoting_voteArrowUp";
         private readonly string arrowDownName = "srvoting_voteArrowDown";
 
-        private Util.ILogger logger;
+        private SRLogger logger;
         private SynthriderzService synthriderzService;
 
         private VoteDirectionComponent upVoteComponent;
@@ -21,7 +22,7 @@ namespace SRVoting
         private string currentSongHash = "";
         private VoteState currentSongVote = VoteState.NO_VOTE;
 
-        public void Init(Util.ILogger logger, SynthriderzService synthriderzService)
+        public void Init(SRLogger logger, SynthriderzService synthriderzService)
         {
             this.logger = logger;
             this.synthriderzService = synthriderzService;

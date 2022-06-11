@@ -5,8 +5,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using MelonLoader;
+using SRModCore;
 using SRVoting.Services;
-using SRVoting.Util;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -14,7 +14,7 @@ namespace SRVoting
 {
     public class SRVoting : MelonMod
     {
-        private static Util.ILogger logger;
+        private static SRLogger logger;
         private SynthriderzService synthriderzService;
         private VotingMonoBehavior votingBehavior;
 

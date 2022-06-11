@@ -1,4 +1,4 @@
-﻿using SRVoting.Util;
+﻿using SRModCore;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,7 +12,7 @@ namespace SRVoting.UI
 {
     class VoteDirectionComponent
     {
-        private Util.ILogger logger;
+        private SRLogger logger;
         private UnityAction<object, VRTK.InteractableObjectEventArgs> onArrowUse;
         private GameObject arrow;
         private VRTK_InteractableObject_UnityEvents arrowEvents;
@@ -22,7 +22,7 @@ namespace SRVoting.UI
         public bool IsUiCreated { get; private set; } = false;
 
 
-        public VoteDirectionComponent(Util.ILogger logger, string arrowName, UnityAction<object, VRTK.InteractableObjectEventArgs> onArrowUse)
+        public VoteDirectionComponent(SRLogger logger, string arrowName, UnityAction<object, VRTK.InteractableObjectEventArgs> onArrowUse)
         {
             this.logger = logger;
             ArrowName = arrowName;

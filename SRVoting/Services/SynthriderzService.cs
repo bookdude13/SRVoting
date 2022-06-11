@@ -1,5 +1,5 @@
-﻿using SRVoting.Models;
-using SRVoting.Util;
+﻿using SRModCore;
+using SRVoting.Models;
 using System;
 using System.Collections;
 using System.Reflection;
@@ -12,11 +12,11 @@ namespace SRVoting.Services
         private readonly string baseUrl = "https://synthriderz.com/api";
         private readonly string userAgent = $"SRVoting/{Assembly.GetExecutingAssembly().GetName().Version}";
 
-        private ILogger logger;
+        private SRLogger logger;
         private SteamAuthService steamAuth;
         private string steamAuthTicket = null;
 
-        public SynthriderzService(ILogger logger, SteamAuthService steamAuth)
+        public SynthriderzService(SRLogger logger, SteamAuthService steamAuth)
         {
             this.logger = logger;
             this.steamAuth = steamAuth;

@@ -4,20 +4,19 @@ using SRVoting.Services;
 using SRVoting.UI;
 using System.Collections;
 using UnityEngine;
-using VRTK.UnityEventHelper;
 
-namespace SRVoting
+namespace SRVoting.MonoBehaviors
 {
-    class VotingMonoBehavior : MonoBehaviour
+    public abstract class VotingMonoBehavior : MonoBehaviour
     {
-        private readonly string arrowUpName = "srvoting_voteArrowUp";
-        private readonly string arrowDownName = "srvoting_voteArrowDown";
+        protected readonly string arrowUpName = "srvoting_voteArrowUp";
+        protected readonly string arrowDownName = "srvoting_voteArrowDown";
 
-        private SRLogger logger;
-        private SynthriderzService synthriderzService;
+        protected SRLogger logger;
+        protected SynthriderzService synthriderzService;
 
-        private VoteDirectionComponent upVoteComponent;
-        private VoteDirectionComponent downVoteComponent;
+        protected VoteDirectionComponent upVoteComponent;
+        protected VoteDirectionComponent downVoteComponent;
 
         private string currentSongHash = "";
         private VoteState currentSongVote = VoteState.NO_VOTE;
@@ -33,10 +32,67 @@ namespace SRVoting
             StartCoroutine(EnsureUIExists());
         }
 
+        protected abstract Synth.Retro.Game_Track_Retro GetSelectedTrack();
+
+        protected abstract IEnumerator EnsureUIExists();
+
         public void Refresh()
         {
             logger.Debug("Refreshing UI");
             StartCoroutine(UpdateVoteUI());
+        }
+
+        private IEnumerator UpdateVoteUI()
+        {
+            if (synthriderzService == null)
+            {
+                logger.Msg("No synthriderz service; skipping");
+                yield return null;
+            }
+
+            logger.Debug("Make sure UI exists...");
+            yield return EnsureUIExists();
+
+            // Start disabled while we wait for everything
+            upVoteComponent.UpdateUI(false, false, "");
+            downVoteComponent.UpdateUI(false, false, "");
+
+            logger.Debug("Song clicked; waiting for update");
+            yield return new WaitForSeconds(0.01f);
+
+            logger.Debug("Getting selected track...");
+            var selectedTrack = GetSelectedTrack();
+            string songName = selectedTrack?.TrackName ?? "";
+            currentSongHash = selectedTrack?.LeaderboardHash ?? "";
+            bool isCustom = selectedTrack?.IsCustomSong ?? false;
+            logger.Msg($"{songName} selected. IsCustom? {isCustom}. Hash: {currentSongHash}");
+
+            if (!isCustom)
+            {
+                upVoteComponent.UpdateUI(false, false, "N/A");
+                downVoteComponent.UpdateUI(false, false, "N/A");
+            }
+            else
+            {
+                VotesResponseModel getVotesResponse = null;
+                string errorMessage = null;
+                yield return synthriderzService.GetVotes(
+                    currentSongHash,
+                    response => getVotesResponse = response,
+                    errorMsg => errorMessage = errorMsg
+                );
+
+                if (errorMessage != null)
+                {
+                    HandleApiError(errorMessage);
+                }
+                else
+                {
+                    HandleApiResponse(getVotesResponse);
+                }
+
+                logger.Debug("Done updating UI");
+            }
         }
 
         private void Vote(object sender, VRTK.InteractableObjectEventArgs e)
@@ -79,58 +135,6 @@ namespace SRVoting
             }
         }
 
-        private IEnumerator UpdateVoteUI()
-        {
-            if (synthriderzService == null)
-            {
-                logger.Msg("No synthriderz service; skipping");
-                yield return null;
-            }
-
-            logger.Debug("Make sure UI exists...");
-            yield return EnsureUIExists();
-
-            // Start disabled while we wait for everything
-            upVoteComponent.UpdateUI(false, false, "");
-            downVoteComponent.UpdateUI(false, false, "");
-
-            logger.Debug("Song clicked; waiting for update");
-            yield return new WaitForSeconds(0.01f);
-
-            logger.Debug("Getting selected track...");
-            var selectedTrack = Synth.SongSelection.SongSelectionManager.GetInstance?.SelectedGameTrack;
-            string songName = selectedTrack?.TrackName ?? "";
-            currentSongHash = selectedTrack?.LeaderboardHash ?? "";
-            bool isCustom = selectedTrack?.IsCustomSong ?? false;
-            logger.Msg($"{songName} selected. IsCustom? {isCustom}. Hash: {currentSongHash}");
-
-            if (!isCustom)
-            {
-                upVoteComponent.UpdateUI(false, false, "N/A");
-                downVoteComponent.UpdateUI(false, false, "N/A");
-            }
-            else {
-                VotesResponseModel getVotesResponse = null;
-                string errorMessage = null;
-                yield return synthriderzService.GetVotes(
-                    currentSongHash,
-                    response => getVotesResponse = response,
-                    errorMsg => errorMessage = errorMsg
-                );
-
-                if (errorMessage != null)
-                {
-                    HandleApiError(errorMessage);
-                }
-                else
-                {
-                    HandleApiResponse(getVotesResponse);
-                }
-
-                logger.Debug("Done updating UI");
-            }
-        }
-
         private void HandleApiError(string errorMessage)
         {
             logger.Msg(errorMessage);
@@ -164,35 +168,6 @@ namespace SRVoting
                     string.Format("{0}", getVotesResponse.DownVoteCount)
                 );
             }
-        }
-
-        private IEnumerator EnsureUIExists()
-        {
-            if (!upVoteComponent.IsUiCreated || !downVoteComponent.IsUiCreated)
-            {
-                logger.Msg("Initializing UI...");
-
-                // Find existing pieces
-                var rootGO = GameObject.Find("CentralPanel/Song Selection/VisibleWrap");
-
-                var controlsGO = rootGO.transform.Find("Controls");
-                var volumeText = controlsGO.Find("MuteWrap/VALUE");
-                var volumeLeft = controlsGO.Find("MuteWrap/Arrow UP");
-                var volumeRight = controlsGO.Find("MuteWrap/Arrow Down");
-
-                var selectedTrackGO = rootGO.transform.Find("Selected Track");
-                var difficultiesGO = selectedTrackGO.transform.Find("Difficulties");
-                Transform hardButton = difficultiesGO.Find("StandardButton - Hard");
-                Transform customButton = difficultiesGO.Find("StandardButton - Custom");
-
-                // Create new pieces
-                upVoteComponent.CreateUI(selectedTrackGO, difficultiesGO, hardButton, volumeLeft, volumeText.gameObject);
-                downVoteComponent.CreateUI(selectedTrackGO, difficultiesGO, customButton, volumeRight, volumeText.gameObject);
-
-                logger.Msg("Done creating UI");
-            }
-
-            yield return null;
         }
     }
 }

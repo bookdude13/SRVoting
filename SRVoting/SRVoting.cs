@@ -6,7 +6,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using MelonLoader;
 using SRModCore;
+using SRVoting.MonoBehaviors;
 using SRVoting.Services;
+using Synth.Versus.Types;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -14,15 +16,23 @@ namespace SRVoting
 {
     public class SRVoting : MelonMod
     {
-        private static SRLogger logger;
+        private readonly string rootMultiplayerName = "srvoting_multiplayer";
+
+        public static SRVoting Instance { get; private set; }
+
+        private SRLogger logger;
         private SynthriderzService synthriderzService;
-        private VotingMonoBehavior votingBehavior;
+        private VotingMainMenu votingBehaviorMainMenu;
+        private VotingMultiplayer votingBehaviorMultiplayer;
+        private GameObject rootGameObjectMultiplayer = null;
+
 
         public override void OnApplicationStart()
         {
             base.OnApplicationStart();
 
             logger = new MelonLoggerWrapper(LoggerInstance);
+            Instance = this;
         }
 
         public override void OnSceneWasInitialized(int buildIndex, string sceneName)
@@ -46,16 +56,46 @@ namespace SRVoting
                 logger.Debug("MainMenu loaded, looking for vote buttons");
                 logger.Debug("Setting up voting mono behavior");
 
-                var votingGO = new GameObject("srvoting_main");
-                votingBehavior = votingGO.AddComponent<VotingMonoBehavior>();
-                votingBehavior.Init(logger, synthriderzService);
+                var votingGO = new GameObject("srvoting_mainmenu");
+                votingBehaviorMainMenu = votingGO.AddComponent<VotingMainMenu>();
+                votingBehaviorMainMenu.Init(logger, synthriderzService);
 
-                Synth.Data.SongsProvider.GetInstance.ItemClicked += (index) => { votingBehavior.Refresh(); };
-                Synth.Data.SongsProvider.GetInstance.ItemsLoaded += (totalSongs) => { votingBehavior.Refresh(); };
+                Synth.Data.SongsProvider.GetInstance.ItemClicked += (index) => { votingBehaviorMainMenu.Refresh(); };
+                Synth.Data.SongsProvider.GetInstance.ItemsLoaded += (totalSongs) => { votingBehaviorMainMenu.Refresh(); };
 
                 // Refresh right away to catch the case when returning from a song
-                votingBehavior.Refresh();
+                votingBehaviorMainMenu.Refresh();
             }
+        }
+
+        public void OnOpenMultiplayerRoomMenu(Synth.Versus.Room room)
+        {
+            if (rootGameObjectMultiplayer != null)
+            {
+                logger.Debug("Multiplayer GO already exists, skip duplicate init...");
+                return;
+            }
+
+            rootGameObjectMultiplayer = new GameObject(rootMultiplayerName);
+            votingBehaviorMultiplayer = rootGameObjectMultiplayer?.AddComponent<VotingMultiplayer>();
+            votingBehaviorMultiplayer?.Init(logger, synthriderzService);
+            votingBehaviorMultiplayer?.Refresh();
+
+            room.OnStateChanged += () =>
+            {
+                logger.Debug("Room state changed to " + room?.State ?? "null");
+                if (room.State == RoomState.Lobby)
+                {
+                    votingBehaviorMultiplayer?.Refresh();
+                }
+            };
+        }
+
+        public void OnMultiplayerRoomLeft()
+        {
+            logger.Debug("Leaving multiplayer room, cleaning up GO");
+            GameObject.Destroy(rootGameObjectMultiplayer);
+            rootGameObjectMultiplayer = null;
         }
     }
 }

@@ -32,14 +32,17 @@ namespace SRVoting.MonoBehaviors
             StartCoroutine(EnsureUIExists());
         }
 
-        protected abstract Synth.Retro.Game_Track_Retro GetSelectedTrack();
-
         protected abstract IEnumerator EnsureUIExists();
 
         public void Refresh()
         {
             logger.Debug("Refreshing UI");
             StartCoroutine(UpdateVoteUI());
+        }
+
+        Synth.Retro.Game_Track_Retro GetSelectedTrack()
+        {
+            return Synth.SongSelection.SongSelectionManager.GetInstance?.SelectedGameTrack;
         }
 
         private IEnumerator UpdateVoteUI()
@@ -65,15 +68,22 @@ namespace SRVoting.MonoBehaviors
             string songName = selectedTrack?.TrackName ?? "";
             currentSongHash = selectedTrack?.LeaderboardHash ?? "";
             bool isCustom = selectedTrack?.IsCustomSong ?? false;
-            logger.Msg($"{songName} selected. IsCustom? {isCustom}. Hash: {currentSongHash}");
 
-            if (!isCustom)
+            if (songName == "" || currentSongHash == "")
             {
+                logger.Msg("No song selected");
+                upVoteComponent.UpdateUI(false, false, "");
+                downVoteComponent.UpdateUI(false, false, "");
+            }
+            else if (!isCustom)
+            {
+                logger.Msg($"OST track '{songName}' selected. Hash: {currentSongHash}");
                 upVoteComponent.UpdateUI(false, false, "N/A");
                 downVoteComponent.UpdateUI(false, false, "N/A");
             }
             else
             {
+                logger.Msg($"Custom song '{songName}' selected. Hash: {currentSongHash}");
                 VotesResponseModel getVotesResponse = null;
                 string errorMessage = null;
                 yield return synthriderzService.GetVotes(

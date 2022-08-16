@@ -53,8 +53,8 @@ namespace SRVoting
 
             if (scene.SceneType == SRScene.SRSceneType.MAIN_MENU)
             {
-                logger.Debug("MainMenu loaded, looking for vote buttons");
-                logger.Debug("Setting up voting mono behavior");
+                logger.Msg("MainMenu loaded, looking for vote buttons");
+                logger.Msg("Setting up voting mono behavior");
 
                 var votingGO = new GameObject("srvoting_mainmenu");
                 votingBehaviorMainMenu = votingGO.AddComponent<VotingMainMenu>();
@@ -72,7 +72,8 @@ namespace SRVoting
         {
             if (rootGameObjectMultiplayer != null)
             {
-                logger.Debug("Multiplayer GO already exists, skip duplicate init...");
+                logger.Msg("Multiplayer GO already exists, refresh instead of init...");
+                votingBehaviorMultiplayer?.Refresh();
                 return;
             }
 
@@ -83,7 +84,7 @@ namespace SRVoting
 
             room.OnStateChanged += () =>
             {
-                logger.Debug("Room state changed to " + room?.State ?? "null");
+                logger.Msg("Room state changed to " + room?.State ?? "null");
                 if (room.State == RoomState.Lobby)
                 {
                     votingBehaviorMultiplayer?.Refresh();
@@ -93,7 +94,7 @@ namespace SRVoting
 
         public void OnMultiplayerRoomLeft()
         {
-            logger.Debug("Leaving multiplayer room, cleaning up GO");
+            logger.Msg("Leaving multiplayer room, cleaning up GO");
             GameObject.Destroy(rootGameObjectMultiplayer);
             rootGameObjectMultiplayer = null;
         }

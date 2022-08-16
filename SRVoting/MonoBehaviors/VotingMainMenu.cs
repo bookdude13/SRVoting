@@ -5,11 +5,6 @@ namespace SRVoting.MonoBehaviors
 {
     public class VotingMainMenu : VotingMonoBehavior
     {
-        protected override Synth.Retro.Game_Track_Retro GetSelectedTrack()
-        {
-            return Synth.SongSelection.SongSelectionManager.GetInstance?.SelectedGameTrack;
-        }
-
         protected override IEnumerator EnsureUIExists()
         {
             if (!upVoteComponent.IsUiCreated || !downVoteComponent.IsUiCreated)

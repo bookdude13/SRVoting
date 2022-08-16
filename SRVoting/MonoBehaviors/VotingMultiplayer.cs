@@ -6,11 +6,6 @@ namespace SRVoting.MonoBehaviors
 {
     public class VotingMultiplayer: VotingMonoBehavior
     {
-        protected override Synth.Retro.Game_Track_Retro GetSelectedTrack()
-        {
-            return null;
-        }
-
         protected override IEnumerator EnsureUIExists()
         {
             if (!upVoteComponent.IsUiCreated || !downVoteComponent.IsUiCreated)
@@ -21,24 +16,17 @@ namespace SRVoting.MonoBehaviors
                 {
                     // Find existing pieces
                     var rootGO = GameObject.Find("Multiplayer/RoomPanel/Rooms/BottomPanel");
-                    logger.Msg("Root GO? " + (rootGO != null));
+
                     var arrowsContainerGO = rootGO.transform.Find("MuteWrap");
-                    logger.Msg("MuteWrap GO? " + (arrowsContainerGO != null));
                     var volumeText = arrowsContainerGO.Find("VALUE");
-                    logger.Msg("volume text? " + (volumeText != null));
                     var volumeLeft = arrowsContainerGO.Find("Arrow UP");
-                    logger.Msg("volume left? " + (volumeLeft != null));
                     var volumeRight = arrowsContainerGO.Find("Arrow Down");
-                    logger.Msg("volume right? " + (volumeRight != null));
 
                     var favoriteWrapGO = rootGO.transform.Find("Favorite Wrap");
-                    logger.Msg("favorite wrap? " + (favoriteWrapGO != null));
 
                     // Create new pieces
-                    logger.Msg("Creating down");
-                    downVoteComponent.CreateUIForHorizontal(favoriteWrapGO, -1.0f, volumeRight, volumeText.gameObject);
-                    logger.Msg("Creating up");
-                    upVoteComponent.CreateUIForHorizontal(favoriteWrapGO, 1.0f, volumeLeft, volumeText.gameObject);
+                    downVoteComponent.CreateUIForHorizontal(favoriteWrapGO, -1.5f, volumeRight, volumeText.gameObject);
+                    upVoteComponent.CreateUIForHorizontal(favoriteWrapGO, 1.5f, volumeLeft, volumeText.gameObject);
 
                     logger.Msg("Done creating UI");
                 }

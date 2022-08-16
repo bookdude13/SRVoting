@@ -67,6 +67,7 @@ namespace SRVoting.UI
         public void CreateUIForHorizontal(
             Transform parent,
             float offsetX,
+            TMPro.TextAlignmentOptions textAlignment,
             Transform arrowToClone,
             GameObject textReference
         )
@@ -89,6 +90,7 @@ namespace SRVoting.UI
 
             arrow.transform.localPosition += new Vector3(offsetX, 0.0f, 0.0f);
             countText.transform.localPosition += new Vector3(offsetX * 2.0f, 0.0f, 0.0f);
+            countText.alignment = textAlignment;
         }
 
         public void CreateUIForVertical(

@@ -25,8 +25,12 @@ namespace SRVoting.MonoBehaviors
                     var favoriteWrapGO = rootGO.transform.Find("Favorite Wrap");
 
                     // Create new pieces
-                    downVoteComponent.CreateUIForHorizontal(favoriteWrapGO, -1.5f, volumeRight, volumeText.gameObject);
-                    upVoteComponent.CreateUIForHorizontal(favoriteWrapGO, 1.5f, volumeLeft, volumeText.gameObject);
+                    downVoteComponent.CreateUIForHorizontal(
+                        favoriteWrapGO, -1.5f, TMPro.TextAlignmentOptions.Right, volumeRight, volumeText.gameObject
+                    );
+                    upVoteComponent.CreateUIForHorizontal(
+                        favoriteWrapGO, 1.5f, TMPro.TextAlignmentOptions.Left, volumeLeft, volumeText.gameObject
+                    );
 
                     logger.Msg("Done creating UI");
                 }

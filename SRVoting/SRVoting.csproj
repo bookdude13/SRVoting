@@ -86,7 +86,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Harmony\Patch_SongSelectionManager_OnLeftRoom.cs" />
     <Compile Include="Harmony\Patch_SongSelectionManager_OpenMultiplayerRoomMenu.cs" />
     <Compile Include="Models\BeatmapModel.cs" />
     <Compile Include="Models\VotesResponseModel.cs" />

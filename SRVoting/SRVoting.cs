@@ -91,12 +91,5 @@ namespace SRVoting
                 }
             };
         }
-
-        public void OnMultiplayerRoomLeft()
-        {
-            logger.Msg("Leaving multiplayer room, cleaning up GO");
-            GameObject.Destroy(rootGameObjectMultiplayer);
-            rootGameObjectMultiplayer = null;
-        }
     }
 }

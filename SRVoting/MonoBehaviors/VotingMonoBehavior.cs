@@ -36,7 +36,7 @@ namespace SRVoting.MonoBehaviors
 
         public void Refresh()
         {
-            logger.Debug("Refreshing UI");
+            logger.Msg("Refreshing UI");
             StartCoroutine(UpdateVoteUI());
         }
 
@@ -45,7 +45,7 @@ namespace SRVoting.MonoBehaviors
             return Synth.SongSelection.SongSelectionManager.GetInstance?.SelectedGameTrack;
         }
 
-        private IEnumerator UpdateVoteUI()
+        protected virtual IEnumerator UpdateVoteUI()
         {
             if (synthriderzService == null)
             {
@@ -158,14 +158,14 @@ namespace SRVoting.MonoBehaviors
         {
             if (getVotesResponse == null)
             {
-                logger.Debug("No vote data, disabling arrows...");
+                logger.Msg("No vote data, disabling arrows...");
                 currentSongVote = VoteState.NO_VOTE;
                 upVoteComponent.UpdateUI(false, false, "");
                 downVoteComponent.UpdateUI(false, false, "");
             }
             else
             {
-                logger.Debug("Updating UI with returned vote info...");
+                logger.Msg("Updating UI with returned vote info...");
                 currentSongVote = getVotesResponse.MyVote();
                 upVoteComponent.UpdateUI(
                     true,

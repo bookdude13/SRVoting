@@ -10,7 +10,7 @@ using VRTK.UnityEventHelper;
 
 namespace SRVoting.UI
 {
-    class VoteDirectionComponent
+    public class VoteDirectionComponent
     {
         private SRLogger logger;
         private UnityAction<object, VRTK.InteractableObjectEventArgs> onArrowUse;
@@ -64,7 +64,36 @@ namespace SRVoting.UI
             }
         }
 
-        public void CreateUI(
+        public void CreateUIForHorizontal(
+            Transform parent,
+            float offsetX,
+            TMPro.TextAlignmentOptions textAlignment,
+            Transform arrowToClone,
+            GameObject textReference
+        )
+        {
+            if (IsUiCreated)
+            {
+                return;
+            }
+
+            IsUiCreated = true;
+
+            var voteContainer = new GameObject("srvoting_container");
+            voteContainer.transform.SetParent(parent, false);
+            voteContainer.transform.localPosition = Vector3.zero;
+            voteContainer.transform.localRotation = parent.localRotation;
+
+            arrow = CreateVoteArrow(voteContainer.transform, arrowToClone);
+            arrowEvents = arrow.GetComponent<VRTK_InteractableObject_UnityEvents>();
+            countText = CreateVoteCountText(voteContainer.transform, arrow, textReference);
+
+            arrow.transform.localPosition += new Vector3(offsetX, 0.0f, 0.0f);
+            countText.transform.localPosition += new Vector3(offsetX * 2.0f, 0.0f, 0.0f);
+            countText.alignment = textAlignment;
+        }
+
+        public void CreateUIForVertical(
             Transform parent,
             Transform leftSideReference,
             Transform rightOffsetReference,
@@ -79,24 +108,15 @@ namespace SRVoting.UI
 
             IsUiCreated = true;
 
-            var container = CreateVoteDirectionContainer(parent, leftSideReference, rightOffsetReference);
-            arrow = CreateVoteArrow(container.transform, arrowToClone);
-            arrowEvents = arrow.GetComponent<VRTK_InteractableObject_UnityEvents>();
-            countText = CreateVoteCountText(container.transform, arrow, textReference);
-        }
-
-        private GameObject CreateVoteDirectionContainer(
-            Transform parent,
-            Transform leftSideReference,
-            Transform rightOffsetReference
-        )
-        {
             var voteContainer = new GameObject("srvoting_container");
             voteContainer.transform.SetParent(parent, false);
             voteContainer.transform.localPosition = leftSideReference.localPosition + rightOffsetReference.localPosition + new Vector3(2.0f, 0.0f, 0.0f);
             voteContainer.transform.localRotation = leftSideReference.localRotation;
 
-            return voteContainer;
+            arrow = CreateVoteArrow(voteContainer.transform, arrowToClone);
+            arrowEvents = arrow.GetComponent<VRTK_InteractableObject_UnityEvents>();
+            countText = CreateVoteCountText(voteContainer.transform, arrow, textReference);
+            countText.transform.localPosition += new Vector3(1.2f, 0.0f, 0.0f);
         }
 
         private GameObject CreateVoteArrow(Transform voteContainer, Transform arrowToClone)
@@ -128,7 +148,7 @@ namespace SRVoting.UI
         {
             var voteCountText = GameObject.Instantiate(textReference, voteContainer);
             voteCountText.name = voteArrow.name + "_text";
-            voteCountText.transform.localPosition = voteArrow.transform.localPosition + new Vector3(1.2f, 0.0f, 0.0f);
+            voteCountText.transform.localPosition = voteArrow.transform.localPosition;
             voteCountText.transform.eulerAngles = textReference.transform.eulerAngles;
 
             var text = voteCountText.GetComponent<TMPro.TMP_Text>();

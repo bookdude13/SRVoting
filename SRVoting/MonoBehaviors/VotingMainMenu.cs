@@ -28,7 +28,7 @@ namespace SRVoting.MonoBehaviors
                 upVoteComponent.CreateUIForVertical(selectedTrackGO, difficultiesGO, hardButton, volumeLeft, volumeText.gameObject);
                 downVoteComponent.CreateUIForVertical(selectedTrackGO, difficultiesGO, customButton, volumeRight, volumeText.gameObject);
 
-                logger.Msg("Done creating UI");
+                logger.Msg("Done creating main menu UI");
             }
 
             yield return null;

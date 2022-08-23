@@ -70,26 +70,26 @@ namespace SRVoting
 
         public void OnOpenMultiplayerRoomMenu(Synth.Versus.Room room)
         {
-            if (rootGameObjectMultiplayer != null)
-            {
-                logger.Msg("Multiplayer GO already exists, refresh instead of init...");
-                votingBehaviorMultiplayer?.Refresh();
-                return;
-            }
-
-            rootGameObjectMultiplayer = new GameObject(rootMultiplayerName);
-            votingBehaviorMultiplayer = rootGameObjectMultiplayer?.AddComponent<VotingMultiplayer>();
-            votingBehaviorMultiplayer?.Init(logger, synthriderzService);
+            EnsureMultiplayerObjects();
             votingBehaviorMultiplayer?.Refresh();
+        }
 
-            room.OnStateChanged += () =>
+        private void EnsureMultiplayerObjects()
+        {
+            if (rootGameObjectMultiplayer == null || votingBehaviorMultiplayer == null)
             {
-                logger.Msg("Room state changed to " + room?.State ?? "null");
-                if (room.State == RoomState.Lobby)
-                {
-                    votingBehaviorMultiplayer?.Refresh();
-                }
-            };
+                logger.Msg("Creating multiplayer objects");
+                rootGameObjectMultiplayer = new GameObject(rootMultiplayerName);
+                votingBehaviorMultiplayer = rootGameObjectMultiplayer?.AddComponent<VotingMultiplayer>();
+                votingBehaviorMultiplayer?.Init(logger, synthriderzService);
+            }
+        }
+
+        public void OnMultiplayerRoomUpdateTrackData()
+        {
+            EnsureMultiplayerObjects();
+            logger.Msg("Refreshing multiplayer on track data reload...");
+            votingBehaviorMultiplayer?.Refresh();
         }
     }
 }

@@ -33,9 +33,9 @@ using MelonLoader;
 // You can specify all the values or you can default the Build and Revision Numbers
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.1.2.0")]
-[assembly: AssemblyFileVersion("1.1.2.0")]
+[assembly: AssemblyVersion("1.1.2")]
+[assembly: AssemblyFileVersion("1.1.2")]
 
-[assembly: MelonInfo(typeof(SRVoting.SRVoting), "SRVoting", "1.1.2.0", "bookdude13", "https://github.com/bookdude13/SRVoting")]
+[assembly: MelonInfo(typeof(SRVoting.SRVoting), "SRVoting", "1.1.2-beta-2", "bookdude13", "https://github.com/bookdude13/SRVoting")]
 [assembly: MelonGame("Kluge Interactive", "SynthRiders")]
 

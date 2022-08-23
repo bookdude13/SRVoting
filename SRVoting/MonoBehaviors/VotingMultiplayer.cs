@@ -52,7 +52,7 @@ namespace SRVoting.MonoBehaviors
             {
                 logger.Msg("Moving countdown timer wrap");
                 // Originally at <2.4, 0.4, 0.0>
-                countdownTimerWrap.transform.localPosition = new Vector3(4.2f, 0.4f, 0.0f);
+                countdownTimerWrap.transform.localPosition = new Vector3(4.4f, 0.4f, 0.0f);
             }
 
             return base.UpdateVoteUI();

@@ -1,5 +1,5 @@
 
-set BUILT_VERSION=1.2.0
+set BUILT_VERSION=1.2.1
 set MOD_NAME=SRVoting
 
 set RELEASE_BUILD_DIR=.\%MOD_NAME%\bin\Release

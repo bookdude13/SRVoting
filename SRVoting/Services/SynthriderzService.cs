@@ -11,19 +11,43 @@ namespace SRVoting.Services
     {
         private readonly string baseUrl = "https://synthriderz.com/api";
         private readonly string userAgent = $"SRVoting/{Assembly.GetExecutingAssembly().GetName().Version}";
+        private readonly int maxFailCount = 3;
 
         private SRLogger logger;
         private SteamAuthService steamAuth;
         private string steamAuthTicket = null;
+        private int failCount = 0;
 
         public SynthriderzService(SRLogger logger, SteamAuthService steamAuth)
         {
             this.logger = logger;
             this.steamAuth = steamAuth;
 
+            RefreshTicket();
+        }
+
+        private void RefreshTicket()
+        {
+            if (failCount >= maxFailCount)
+            {
+                logger.Msg("Too many failures, stopped trying to get ticket");
+                return;
+            }
+
             steamAuth.GetAuthTicketAsync(ticket => {
                 logger.Debug("Ticket: " + ticket);
-                steamAuthTicket = ticket;
+                if (ticket == null)
+                {
+                    logger.Debug($"Retrying ticket retrieval");
+                    failCount++;
+                    RefreshTicket();
+                }
+                else
+                {
+                    logger.Debug("Successfully retrieved ticket");
+                    failCount = 0;
+                    steamAuthTicket = ticket;
+                }
             });
         }
 
@@ -127,15 +151,16 @@ namespace SRVoting.Services
                     logger.Msg("Invalid auth ticket: " + responseRaw);
 
                     // Try to refresh for next attempts
-                    steamAuth.GetAuthTicketAsync(ticket => {
-                        logger.Msg("Refreshed ticket: " + ticket);
-                        steamAuthTicket = ticket;
-                    });
+                    RefreshTicket();
 
                     onFail("Authentication problem\nPlease try again");
                     break;
                 case 403:
                     logger.Msg("Forbidden auth ticket: " + responseRaw);
+
+                    // Try to refresh for next attempts
+                    RefreshTicket();
+
                     onFail("Forbidden");
                     break;
                 case 404:

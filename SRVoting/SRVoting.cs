@@ -27,9 +27,9 @@ namespace SRVoting
         private GameObject rootGameObjectMultiplayer = null;
 
 
-        public override void OnApplicationStart()
+        public override void OnInitializeMelon()
         {
-            base.OnApplicationStart();
+            base.OnInitializeMelon();
 
             logger = new MelonLoggerWrapper(LoggerInstance);
             Instance = this;

@@ -1,12 +1,16 @@
-﻿using SRModCore;
+﻿using Il2CppMiKu.NET.Charting;
+using MelonLoader;
+using SRModCore;
 using SRVoting.Models;
 using SRVoting.Services;
 using SRVoting.UI;
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace SRVoting.MonoBehaviors
 {
+    [RegisterTypeInIl2Cpp]
     public abstract class VotingMonoBehavior : MonoBehaviour
     {
         protected readonly string arrowUpName = "srvoting_voteArrowUp";
@@ -26,10 +30,12 @@ namespace SRVoting.MonoBehaviors
             this.logger = logger;
             this.synthriderzService = synthriderzService;
 
-            upVoteComponent = new VoteDirectionComponent(logger, arrowUpName, Vote);
-            downVoteComponent = new VoteDirectionComponent(logger, arrowDownName, Vote);
+            //UnityAction<object, Il2CppVRTK.InteractableObjectEventArgs> voteAction = (object sender, Il2CppVRTK.InteractableObjectEventArgs e) => Vote(sender, e);
 
-            StartCoroutine(EnsureUIExists());
+            upVoteComponent = new VoteDirectionComponent(logger, arrowUpName/*, voteAction*/);
+            downVoteComponent = new VoteDirectionComponent(logger, arrowDownName/*, voteAction*/);
+
+            MelonCoroutines.Start(EnsureUIExists());
         }
 
         protected abstract IEnumerator EnsureUIExists();
@@ -37,12 +43,12 @@ namespace SRVoting.MonoBehaviors
         public void Refresh()
         {
             logger.Msg("Refreshing UI");
-            StartCoroutine(UpdateVoteUI());
+            StartCoroutine("UpdateVoteUI");
         }
 
-        Synth.Retro.Game_Track_Retro GetSelectedTrack()
+        Il2CppSynth.Retro.Game_Track_Retro GetSelectedTrack()
         {
-            return Synth.SongSelection.SongSelectionManager.GetInstance?.SelectedGameTrack;
+            return Il2CppSynth.SongSelection.SongSelectionManager.GetInstance?.SelectedGameTrack;
         }
 
         protected virtual IEnumerator UpdateVoteUI()
@@ -105,9 +111,9 @@ namespace SRVoting.MonoBehaviors
             }
         }
 
-        private void Vote(object sender, VRTK.InteractableObjectEventArgs e)
+        private void Vote(object sender/*, Il2CppVRTK.InteractableObjectEventArgs e*/)
         {
-            string senderName = ((VRTK.VRTK_InteractableObject)sender).name;
+            string senderName = "";/* ((Il2CppVRTK.VRTK_InteractableObject)sender).name;*/
 
             // Translate sender into up/down
             VoteState newVote = senderName == arrowUpName ? VoteState.VOTED_UP : VoteState.VOTED_DOWN;
@@ -120,7 +126,7 @@ namespace SRVoting.MonoBehaviors
             downVoteComponent.DisableEvents();
             
             logger.Debug($"Voting for song {currentSongHash}. Old: {currentSongVote}, New: {voteToSend}");
-            StartCoroutine(VoteAndUpdateUI(voteToSend));
+            StartCoroutine((Il2CppSystem.Collections.IEnumerator)VoteAndUpdateUI(voteToSend));
         }
 
         private IEnumerator VoteAndUpdateUI(VoteState vote)

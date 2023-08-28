@@ -8,9 +8,11 @@ using MelonLoader;
 using SRModCore;
 using SRVoting.MonoBehaviors;
 using SRVoting.Services;
-using Synth.Versus.Types;
+using Il2CppSynth.Versus.Types;
 using UnityEngine;
 using UnityEngine.UI;
+using Il2CppSynth.Data;
+using Il2Cppcom.Kluge.XR.Utils;
 
 namespace SRVoting
 {
@@ -50,25 +52,39 @@ namespace SRVoting
                 synthriderzService = new SynthriderzService(logger, steamAuthService);
             }
 
-
             if (scene.SceneType == SRScene.SRSceneType.MAIN_MENU)
             {
                 logger.Msg("MainMenu loaded, looking for vote buttons");
                 logger.Msg("Setting up voting mono behavior");
 
-                var votingGO = new GameObject("srvoting_mainmenu");
-                votingBehaviorMainMenu = votingGO.AddComponent<VotingMainMenu>();
-                votingBehaviorMainMenu.Init(logger, synthriderzService);
+                /*var roots = UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects();
+                foreach (var root in roots)
+                {
+                    UnityUtil.LogGameObjectHierarchy(
+                        logger,
+                        root.transform
+                    );
+                }*/
 
-                Synth.Data.SongsProvider.GetInstance.ItemClicked += (index) => { votingBehaviorMainMenu.Refresh(); };
-                Synth.Data.SongsProvider.GetInstance.ItemsLoaded += (totalSongs) => { votingBehaviorMainMenu.Refresh(); };
+                var zWrap = GameObject.Find("Main Stage Prefab/Z-Wrap");
+                var votingGO = GameObject.Instantiate(new GameObject("srvoting_mainmenu"), zWrap.transform);
+                //var votingGO = new GameObject("srvoting_mainmenu");
+                logger.Msg("Created GO " + votingGO);
+                // TODO hook into existing method and add our loop, or set up differently than MonoBehavior
+                votingBehaviorMainMenu = votingGO.AddComponent<VotingMainMenu>();
+                logger.Msg("Added");
+                votingBehaviorMainMenu.Init(logger, synthriderzService);
+                logger.Msg("Initialized");
+
+                Il2CppSynth.Data.SongsProvider.GetInstance.ItemClicked += (ListProviderEventHandler)((index) => { votingBehaviorMainMenu.Refresh(); });
+                Il2CppSynth.Data.SongsProvider.GetInstance.ItemsLoaded += (ListProviderEventHandler)((totalSongs) => { votingBehaviorMainMenu.Refresh(); });
 
                 // Refresh right away to catch the case when returning from a song
                 votingBehaviorMainMenu.Refresh();
             }
         }
 
-        public void OnOpenMultiplayerRoomMenu(Synth.Versus.Room room)
+        public void OnOpenMultiplayerRoomMenu(Il2CppSynth.Versus.Room room)
         {
             EnsureMultiplayerObjects();
             votingBehaviorMultiplayer?.Refresh();

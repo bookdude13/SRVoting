@@ -5,7 +5,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using SRModCore;
-using Steamworks;
+using Il2CppSteamworks;
+using Il2Cpp;
 
 namespace SRVoting.Services
 {
@@ -68,12 +69,14 @@ namespace SRVoting.Services
                             case EUserHasLicenseForAppResult.k_EUserHasLicenseResultHasLicense:
                                 if (m_GetAuthSessionTicketResponse == null)
                                 {
-                                    m_GetAuthSessionTicketResponse = Callback<GetAuthSessionTicketResponse_t>.Create(response => {
+                                    Action<GetAuthSessionTicketResponse_t> onCreate = response =>
+                                    {
                                         if (lastTicket == response.m_hAuthTicket)
                                         {
                                             lastTicketResult = response.m_eResult;
                                         }
-                                    });
+                                    };
+                                    m_GetAuthSessionTicketResponse = Callback<GetAuthSessionTicketResponse_t>.Create(onCreate);
                                 }
 
                                 lastTicket = SteamUser.GetAuthSessionTicket(authTicket, authTicketMaxLength, out length);

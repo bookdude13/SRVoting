@@ -1,10 +1,12 @@
-﻿using SRModCore;
+﻿using MelonLoader;
+using SRModCore;
 using System;
 using System.Collections;
 using UnityEngine;
 
 namespace SRVoting.MonoBehaviors
 {
+    [RegisterTypeInIl2Cpp]
     public class VotingMultiplayer: VotingMonoBehavior
     {
         protected override IEnumerator EnsureUIExists()
@@ -28,10 +30,10 @@ namespace SRVoting.MonoBehaviors
 
                     // Create new pieces
                     downVoteComponent.CreateUIForHorizontal(
-                        favoriteWrapGO, -1.5f, TMPro.TextAlignmentOptions.Right, volumeRight, volumeText.gameObject
+                        favoriteWrapGO, -1.5f, Il2CppTMPro.TextAlignmentOptions.Right, volumeRight, volumeText.gameObject
                     );
                     upVoteComponent.CreateUIForHorizontal(
-                        favoriteWrapGO, 1.5f, TMPro.TextAlignmentOptions.Left, volumeLeft, volumeText.gameObject
+                        favoriteWrapGO, 1.5f, Il2CppTMPro.TextAlignmentOptions.Left, volumeLeft, volumeText.gameObject
                     );
 
                     logger.Msg("Done creating UI");

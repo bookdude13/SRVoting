@@ -4,6 +4,7 @@ using SRModCore;
 using SRVoting.Models;
 using SRVoting.Services;
 using SRVoting.UI;
+using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
@@ -25,15 +26,23 @@ namespace SRVoting.MonoBehaviors
         private string currentSongHash = "";
         private VoteState currentSongVote = VoteState.NO_VOTE;
 
+        public VotingMonoBehavior(IntPtr ptr) : base(ptr) { }
+
         public void Init(SRLogger logger, SynthriderzService synthriderzService)
         {
             this.logger = logger;
             this.synthriderzService = synthriderzService;
 
-            //UnityAction<object, Il2CppVRTK.InteractableObjectEventArgs> voteAction = (object sender, Il2CppVRTK.InteractableObjectEventArgs e) => Vote(sender, e);
-
-            upVoteComponent = new VoteDirectionComponent(logger, arrowUpName/*, voteAction*/);
-            downVoteComponent = new VoteDirectionComponent(logger, arrowDownName/*, voteAction*/);
+            upVoteComponent = new VoteDirectionComponent(
+                logger,
+                arrowUpName,
+                new Action(() => Vote(arrowUpName))
+            );
+            downVoteComponent = new VoteDirectionComponent(
+                logger,
+                arrowDownName,
+                new Action(() => Vote(arrowDownName))
+            );
 
             MelonCoroutines.Start(EnsureUIExists());
         }
@@ -111,10 +120,8 @@ namespace SRVoting.MonoBehaviors
             }
         }
 
-        private void Vote(object sender/*, Il2CppVRTK.InteractableObjectEventArgs e*/)
+        private void Vote(string senderName)
         {
-            string senderName = "";/* ((Il2CppVRTK.VRTK_InteractableObject)sender).name;*/
-
             // Translate sender into up/down
             VoteState newVote = senderName == arrowUpName ? VoteState.VOTED_UP : VoteState.VOTED_DOWN;
 

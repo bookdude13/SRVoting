@@ -1,37 +1,36 @@
-﻿using SRModCore;
+﻿using Il2Cpp;
+using SRModCore;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.UI;
-//using UnityEventHelper;
 
 namespace SRVoting.UI
 {
     public class VoteDirectionComponent
     {
         private SRLogger logger;
-        //private UnityAction<object, Il2CppVRTK.InteractableObjectEventArgs> onArrowUse;
+        private UnityAction onArrowUse;
         private GameObject arrow;
-        //private VRTK_InteractableObject_UnityEvents arrowEvents;
+        private Il2Cpp.SynthUIButton synthButton;
         private Il2CppTMPro.TMP_Text countText;
 
         public string ArrowName { get; private set; }
         public bool IsUiCreated { get; private set; } = false;
 
 
-        public VoteDirectionComponent(SRLogger logger, string arrowName/*, UnityAction<object, VRTK.InteractableObjectEventArgs> onArrowUse*/)
+        public VoteDirectionComponent(SRLogger logger, string arrowName, UnityAction onArrowUse)
         {
             this.logger = logger;
             ArrowName = arrowName;
-            //this.onArrowUse = onArrowUse;
+            this.onArrowUse = onArrowUse;
         }
 
         public void DisableEvents()
         {
-            //arrowEvents?.OnUse?.RemoveAllListeners();
+            synthButton?.WhenClicked?.RemoveAllListeners();
         }
 
         public void UpdateUI(bool isActive, bool isMyVote, string text)
@@ -49,18 +48,17 @@ namespace SRVoting.UI
                 countText.color = new Color(0.4f, 0.4f, 0.4f, 1.0f);
             }
 
+            var vrtkHelper = arrow.GetComponent<Il2CppSynth.Utils.VRTKButtonHelper>();
             if (isActive)
             {
-                /*arrowEvents.OnUse.RemoveAllListeners();
-                arrowEvents.OnUse.AddListener(onArrowUse);*/
-
-                arrow.GetComponent<Il2CppSynth.Utils.VRTKButtonHelper>().SetActive();
+                synthButton?.WhenClicked?.RemoveAllListeners();
+                synthButton?.WhenClicked?.AddListener(onArrowUse);
+                vrtkHelper.SetActive();
             }
             else
             {
-/*                arrowEvents.OnUse.RemoveAllListeners();*/
-
-                arrow.GetComponent<Il2CppSynth.Utils.VRTKButtonHelper>().SetInactive();
+                synthButton?.WhenClicked?.RemoveAllListeners();
+                vrtkHelper.SetInactive();
             }
         }
 
@@ -85,7 +83,6 @@ namespace SRVoting.UI
             voteContainer.transform.localRotation = parent.localRotation;
 
             arrow = CreateVoteArrow(voteContainer.transform, arrowToClone);
-            //arrowEvents = arrow.GetComponent<VRTK_InteractableObject_UnityEvents>();
             countText = CreateVoteCountText(voteContainer.transform, arrow, textReference);
 
             arrow.transform.localPosition += new Vector3(offsetX, 0.0f, 0.0f);
@@ -114,7 +111,6 @@ namespace SRVoting.UI
             voteContainer.transform.localRotation = leftSideReference.localRotation;
 
             arrow = CreateVoteArrow(voteContainer.transform, arrowToClone);
-            //arrowEvents = arrow.GetComponent<VRTK_InteractableObject_UnityEvents>();
             countText = CreateVoteCountText(voteContainer.transform, arrow, textReference);
             countText.transform.localPosition += new Vector3(1.2f, 0.0f, 0.0f);
         }
@@ -128,17 +124,17 @@ namespace SRVoting.UI
             voteArrow.localEulerAngles = arrowToClone.localEulerAngles + new Vector3(0f, 0f, 90f);
 
             // Replace button event
-            //var buttonEvents = voteArrow.GetComponent<VRTK_InteractableObject_UnityEvents>();
-            //buttonEvents.OnUse.RemoveAllListeners();
+            var synthButton = voteArrow.GetComponent<SynthUIButton>();
+            synthButton.WhenClicked.RemoveAllListeners();
 
             // 2 persistent listeners not removed by RemoveAllListeners() exist
             // See https://forum.unity.com/threads/documentation-unityevent-removealllisteners-only-removes-non-persistent-listeners.341796/
             // After trial and error, the one at index 0 controls volume still and needs to be disabled.
             // The one at index 1 still needs to stick around to handle new events
-            //buttonEvents.OnUse.SetPersistentListenerState(0, UnityEventCallState.Off);
+            //synthButton.WhenClicked.SetPersistentListenerState(0, UnityEventCallState.Off);
 
             voteArrow.gameObject.SetActive(true);
-            //buttonEvents.OnUse.AddListener(onArrowUse);
+            synthButton.WhenClicked.AddListener(onArrowUse);
 
             logger.Debug($"Arrow added");
             return voteArrow.gameObject;

@@ -1,4 +1,5 @@
 ﻿using MelonLoader;
+using System;
 using System.Collections;
 using UnityEngine;
 
@@ -7,15 +8,13 @@ namespace SRVoting.MonoBehaviors
     [RegisterTypeInIl2Cpp]
     public class VotingMainMenu : VotingMonoBehavior
     {
+        public VotingMainMenu(IntPtr ptr) : base(ptr) { }
+
         protected override IEnumerator EnsureUIExists()
         {
             if (!upVoteComponent.IsUiCreated || !downVoteComponent.IsUiCreated)
             {
                 logger.Msg("Initializing Main Menu UI...");
-
-                // VolValue
-                // Volume UP
-                // Volume Down
 
                 // MP?
                 // Multiplayer/RoomPanel/HandMenu/VisibleWrap/PositionWrap/RotationWrap/Panel/Canvas/Track Preview Panel/Volume Wrap/Arrow UP

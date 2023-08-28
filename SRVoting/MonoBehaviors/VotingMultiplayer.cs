@@ -9,6 +9,8 @@ namespace SRVoting.MonoBehaviors
     [RegisterTypeInIl2Cpp]
     public class VotingMultiplayer: VotingMonoBehavior
     {
+        public VotingMultiplayer(IntPtr ptr) : base(ptr) { }
+
         protected override IEnumerator EnsureUIExists()
         {
             var elementsCreated = upVoteComponent.IsUiCreated && downVoteComponent.IsUiCreated;

@@ -1,4 +1,5 @@
-﻿using MelonLoader;
+﻿using Il2CppInterop.Runtime.Attributes;
+using MelonLoader;
 using SRModCore;
 using System;
 using System.Collections;
@@ -11,7 +12,7 @@ namespace SRVoting.MonoBehaviors
     {
         public VotingMultiplayer(IntPtr ptr) : base(ptr) { }
 
-        protected override IEnumerator EnsureUIExists()
+        protected override System.Collections.IEnumerator EnsureUIExists()
         {
             var elementsCreated = upVoteComponent.IsUiCreated && downVoteComponent.IsUiCreated;
             if (!elementsCreated)
@@ -21,21 +22,28 @@ namespace SRVoting.MonoBehaviors
                 try
                 {
                     // Find existing pieces
-                    var rootGO = GameObject.Find("Multiplayer/RoomPanel/Rooms/BottomPanel");
+                    var rootGO = GameObject.Find("Multiplayer/RoomPanel/HandMenu/VisibleWrap/PositionWrap/RotationWrap/Panel/Canvas/Track Preview Panel");
+                    logger.Msg("Root " + rootGO);
+/*                    var root2 = GameObject.Find("Main Stage Prefab/Z-Wrap/Multiplayer");
+                    logger.Msg("Root2 " + root2);*/
+                    var arrowsContainer = rootGO.transform.Find("Volume Wrap");
+                    logger.Msg("ctr " + arrowsContainer);
+                    var volumeText = arrowsContainer.Find("label");
+                    logger.Msg("txt " + volumeText);
+                    var volumeLeft = arrowsContainer.Find("Arrow UP");
+                    logger.Msg("l " + volumeLeft);
+                    var volumeRight = arrowsContainer.Find("Arrow Down");
+                    logger.Msg("r " + volumeRight);
 
-                    var arrowsContainerGO = rootGO.transform.Find("MuteWrap");
-                    var volumeText = arrowsContainerGO.Find("VALUE");
-                    var volumeLeft = arrowsContainerGO.Find("Arrow UP");
-                    var volumeRight = arrowsContainerGO.Find("Arrow Down");
-
-                    var favoriteWrapGO = rootGO.transform.Find("Favorite Wrap");
+                    var favoriteWrapGO = rootGO.transform.Find("Song Info Wrap/Favorite Wrap");
+                    logger.Msg("fav" + favoriteWrapGO);
 
                     // Create new pieces
                     downVoteComponent.CreateUIForHorizontal(
-                        favoriteWrapGO, -1.5f, Il2CppTMPro.TextAlignmentOptions.Right, volumeRight, volumeText.gameObject
+                        favoriteWrapGO, -1.5f, Il2CppTMPro.TextAlignmentOptions.Right, volumeLeft, volumeText.gameObject
                     );
                     upVoteComponent.CreateUIForHorizontal(
-                        favoriteWrapGO, 1.5f, Il2CppTMPro.TextAlignmentOptions.Left, volumeLeft, volumeText.gameObject
+                        favoriteWrapGO, 1.5f, Il2CppTMPro.TextAlignmentOptions.Left, volumeRight, volumeText.gameObject
                     );
 
                     logger.Msg("Done creating UI");

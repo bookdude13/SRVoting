@@ -1,4 +1,5 @@
-﻿using MelonLoader;
+﻿using Il2CppInterop.Runtime.Attributes;
+using MelonLoader;
 using System;
 using System.Collections;
 using UnityEngine;
@@ -10,7 +11,7 @@ namespace SRVoting.MonoBehaviors
     {
         public VotingMainMenu(IntPtr ptr) : base(ptr) { }
 
-        protected override IEnumerator EnsureUIExists()
+        protected override System.Collections.IEnumerator EnsureUIExists()
         {
             if (!upVoteComponent.IsUiCreated || !downVoteComponent.IsUiCreated)
             {

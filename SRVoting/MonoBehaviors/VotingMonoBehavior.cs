@@ -1,4 +1,5 @@
-﻿using Il2CppMiKu.NET.Charting;
+﻿using Il2CppInterop.Runtime.Attributes;
+using Il2CppMiKu.NET.Charting;
 using MelonLoader;
 using SRModCore;
 using SRVoting.Models;
@@ -47,12 +48,12 @@ namespace SRVoting.MonoBehaviors
             MelonCoroutines.Start(EnsureUIExists());
         }
 
-        protected abstract IEnumerator EnsureUIExists();
+        protected abstract System.Collections.IEnumerator EnsureUIExists();
 
         public void Refresh()
         {
             logger.Msg("Refreshing UI");
-            StartCoroutine("UpdateVoteUI");
+            MelonCoroutines.Start(UpdateVoteUI());
         }
 
         Il2CppSynth.Retro.Game_Track_Retro GetSelectedTrack()
@@ -60,7 +61,7 @@ namespace SRVoting.MonoBehaviors
             return Il2CppSynth.SongSelection.SongSelectionManager.GetInstance?.SelectedGameTrack;
         }
 
-        protected virtual IEnumerator UpdateVoteUI()
+        protected virtual System.Collections.IEnumerator UpdateVoteUI()
         {
             if (synthriderzService == null)
             {
@@ -133,10 +134,10 @@ namespace SRVoting.MonoBehaviors
             downVoteComponent.DisableEvents();
             
             logger.Debug($"Voting for song {currentSongHash}. Old: {currentSongVote}, New: {voteToSend}");
-            StartCoroutine((Il2CppSystem.Collections.IEnumerator)VoteAndUpdateUI(voteToSend));
+            MelonCoroutines.Start(VoteAndUpdateUI(voteToSend));
         }
 
-        private IEnumerator VoteAndUpdateUI(VoteState vote)
+        private System.Collections.IEnumerator VoteAndUpdateUI(VoteState vote)
         {
             VotesResponseModel getVotesResponse = null;
             string errorMessage = null;

@@ -70,7 +70,6 @@ namespace SRVoting
                 var votingGO = GameObject.Instantiate(new GameObject("srvoting_mainmenu"), zWrap.transform);
                 //var votingGO = new GameObject("srvoting_mainmenu");
                 logger.Msg("Created GO " + votingGO);
-                // TODO hook into existing method and add our loop, or set up differently than MonoBehavior
                 votingBehaviorMainMenu = votingGO.AddComponent<VotingMainMenu>();
                 logger.Msg("Added");
                 votingBehaviorMainMenu.Init(logger, synthriderzService);

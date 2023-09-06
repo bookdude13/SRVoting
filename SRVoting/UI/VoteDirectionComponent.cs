@@ -1,4 +1,5 @@
 ﻿using Il2Cpp;
+using Il2CppInterop.Runtime.Attributes;
 using SRModCore;
 using System.Collections.Generic;
 using System.Linq;
@@ -123,18 +124,25 @@ namespace SRVoting.UI
             voteArrow.localPosition = Vector3.zero;
             voteArrow.localEulerAngles = arrowToClone.localEulerAngles + new Vector3(0f, 0f, 90f);
 
-            // Replace button event
-            var synthButton = voteArrow.GetComponent<SynthUIButton>();
-            synthButton.WhenClicked.RemoveAllListeners();
-
-            // 2 persistent listeners not removed by RemoveAllListeners() exist
+            // Replace button setup in order to remove persistent listeners,
+            // since directly removing those didn't work
             // See https://forum.unity.com/threads/documentation-unityevent-removealllisteners-only-removes-non-persistent-listeners.341796/
-            // After trial and error, the one at index 0 controls volume still and needs to be disabled.
-            // The one at index 1 still needs to stick around to handle new events
-            //synthButton.WhenClicked.SetPersistentListenerState(0, UnityEventCallState.Off);
+            Component.Destroy(voteArrow.GetComponent<SynthUIButton>());
+            //Component.Destroy(voteArrow.GetComponent<UnityEngine.UI.Button>());
+            logger.Msg("Destroyed buttons");
+
+            var unityButton = voteArrow.gameObject.GetComponent<UnityEngine.UI.Button>();
+            var synthButton = voteArrow.gameObject.AddComponent<SynthUIButton>();
+            synthButton.WhenClicked = new UnityEvent();
+            logger.Msg("Added buttons");
 
             voteArrow.gameObject.SetActive(true);
+
+            logger.Msg("Adding listener");
+            unityButton.onClick.AddListener(new System.Action(() => { synthButton.WhenClicked.Invoke(); }));
+            unityButton.onClick.AddListener(new System.Action(() => { logger.Msg("Invoked"); }));
             synthButton.WhenClicked.AddListener(onArrowUse);
+            logger.Msg("Added listener");
 
             logger.Debug($"Arrow added");
             return voteArrow.gameObject;

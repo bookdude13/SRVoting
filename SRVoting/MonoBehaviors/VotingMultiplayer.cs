@@ -22,20 +22,19 @@ namespace SRVoting.MonoBehaviors
                 try
                 {
                     // Find existing pieces
-                    var rootGO = GameObject.Find("Multiplayer/RoomPanel/HandMenu/VisibleWrap/PositionWrap/RotationWrap/Panel/Canvas/Track Preview Panel");
+                    var rootGO = GameObject.Find("Main Stage Prefab/Z-Wrap/Multiplayer/RoomPanel/MultiplayerRoomPanel/BottomPanel");
                     logger.Msg("Root " + rootGO);
-/*                    var root2 = GameObject.Find("Main Stage Prefab/Z-Wrap/Multiplayer");
-                    logger.Msg("Root2 " + root2);*/
-                    var arrowsContainer = rootGO.transform.Find("Volume Wrap");
+                    
+                    var arrowsContainer = rootGO.transform.Find("VolumeControl");
                     logger.Msg("ctr " + arrowsContainer);
-                    var volumeText = arrowsContainer.Find("label");
+                    var volumeText = arrowsContainer.Find("VALUE");
                     logger.Msg("txt " + volumeText);
-                    var volumeLeft = arrowsContainer.Find("Arrow UP");
+                    var volumeLeft = arrowsContainer.Find("Arrow Up");
                     logger.Msg("l " + volumeLeft);
                     var volumeRight = arrowsContainer.Find("Arrow Down");
                     logger.Msg("r " + volumeRight);
 
-                    var favoriteWrapGO = rootGO.transform.Find("Song Info Wrap/Favorite Wrap");
+                    var favoriteWrapGO = rootGO.transform.Find("SongInfo/Favorite Wrap");
                     logger.Msg("fav" + favoriteWrapGO);
 
                     // Create new pieces

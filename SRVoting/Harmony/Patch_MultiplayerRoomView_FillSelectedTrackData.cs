@@ -1,14 +1,15 @@
 ﻿using HarmonyLib;
-using Il2CppUtil.Controller;
+using Il2CppInterop.Runtime.InteropTypes.Arrays;
+using Il2CppSynth.Multiplayer;
 
 namespace SRVoting.Harmony
 {
     // This is called during initialization (for the host),
     // and from Game_InfoProvider.OnEvent() with event code SetSelectedVersusTrack (for clients)
-    [HarmonyPatch(typeof(MultiplayerRoomController), nameof(MultiplayerRoomController.FillSelectedTrackData))]
-    public class Patch_MultiplayerRoomController_FillSelectedTrackData
+    [HarmonyPatch(typeof(MultiplayerRoomView), nameof(MultiplayerRoomView.FillSelectedTrackData))]
+    public class Patch_MultiplayerRoomView_FillSelectedTrackData
     {
-        public static void Postfix(object[] data)
+        public static void Postfix()
         {
             SRVoting.Instance?.OnMultiplayerRoomUpdateTrackData();
         }

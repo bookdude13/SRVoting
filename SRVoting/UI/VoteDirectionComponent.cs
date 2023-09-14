@@ -31,6 +31,7 @@ namespace SRVoting.UI
 
         public void DisableEvents()
         {
+            logger.Msg("Disable events");
             synthButton?.WhenClicked?.RemoveAllListeners();
         }
 
@@ -50,6 +51,9 @@ namespace SRVoting.UI
             }
 
             var vrtkHelper = arrow.GetComponent<Il2CppSynth.Utils.VRTKButtonHelper>();
+            logger.Msg("vrtk helper " + vrtkHelper);
+            logger.Msg("is active " + isActive);
+
             if (isActive)
             {
                 synthButton?.WhenClicked?.RemoveAllListeners();
@@ -124,23 +128,18 @@ namespace SRVoting.UI
             voteArrow.localPosition = Vector3.zero;
             voteArrow.localEulerAngles = arrowToClone.localEulerAngles + new Vector3(0f, 0f, 90f);
 
-            // Replace button setup in order to remove persistent listeners,
-            // since directly removing those didn't work
+            // Directly removing persistent listeners doesn't work
             // See https://forum.unity.com/threads/documentation-unityevent-removealllisteners-only-removes-non-persistent-listeners.341796/
-            Component.Destroy(voteArrow.GetComponent<SynthUIButton>());
-            //Component.Destroy(voteArrow.GetComponent<UnityEngine.UI.Button>());
-            logger.Msg("Destroyed buttons");
-
-            var unityButton = voteArrow.gameObject.GetComponent<UnityEngine.UI.Button>();
-            var synthButton = voteArrow.gameObject.AddComponent<SynthUIButton>();
+            // But...it looks like the persistent listener just calls the synth button.
+            // Wiping out the WhenClicked callback gets rid of old behavior
+            // and lets us add our own callbacks without any hassle
+            logger.Msg("Setting up button");
+            var synthButton = voteArrow.gameObject.GetComponent<SynthUIButton>();
             synthButton.WhenClicked = new UnityEvent();
-            logger.Msg("Added buttons");
 
             voteArrow.gameObject.SetActive(true);
 
             logger.Msg("Adding listener");
-            unityButton.onClick.AddListener(new System.Action(() => { synthButton.WhenClicked.Invoke(); }));
-            unityButton.onClick.AddListener(new System.Action(() => { logger.Msg("Invoked"); }));
             synthButton.WhenClicked.AddListener(onArrowUse);
             logger.Msg("Added listener");
 

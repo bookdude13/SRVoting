@@ -57,18 +57,8 @@ namespace SRVoting
                 logger.Msg("MainMenu loaded, looking for vote buttons");
                 logger.Msg("Setting up voting mono behavior");
 
-                /*var roots = UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects();
-                foreach (var root in roots)
-                {
-                    UnityUtil.LogGameObjectHierarchy(
-                        logger,
-                        root.transform
-                    );
-                }*/
-
                 var zWrap = GameObject.Find("Main Stage Prefab/Z-Wrap");
                 var votingGO = GameObject.Instantiate(new GameObject("srvoting_mainmenu"), zWrap.transform);
-                //var votingGO = new GameObject("srvoting_mainmenu");
                 logger.Msg("Created GO " + votingGO);
                 votingBehaviorMainMenu = votingGO.AddComponent<VotingMainMenu>();
                 logger.Msg("Added");
@@ -94,9 +84,10 @@ namespace SRVoting
             if (rootGameObjectMultiplayer == null || votingBehaviorMultiplayer == null)
             {
                 logger.Msg("Creating multiplayer objects");
-                rootGameObjectMultiplayer = new GameObject(rootMultiplayerName);
-                votingBehaviorMultiplayer = rootGameObjectMultiplayer?.AddComponent<VotingMultiplayer>();
-                votingBehaviorMultiplayer?.Init(logger, synthriderzService);
+                var zWrap = GameObject.Find("Main Stage Prefab/Z-Wrap");
+                rootGameObjectMultiplayer = GameObject.Instantiate(new GameObject(rootMultiplayerName), zWrap.transform);
+                votingBehaviorMultiplayer = rootGameObjectMultiplayer.AddComponent<VotingMultiplayer>();
+                votingBehaviorMultiplayer.Init(logger, synthriderzService);
             }
         }
 

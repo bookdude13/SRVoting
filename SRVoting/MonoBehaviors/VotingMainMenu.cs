@@ -17,13 +17,6 @@ namespace SRVoting.MonoBehaviors
             {
                 logger.Msg("Initializing Main Menu UI...");
 
-                // MP?
-                // Multiplayer/RoomPanel/HandMenu/VisibleWrap/PositionWrap/RotationWrap/Panel/Canvas/Track Preview Panel/Volume Wrap/Arrow UP
-                // Volume Wrap/Arrow Down
-
-                // MultiplayerRoomPanel/BottomPanel/VolumeControl/Arrow Up
-                // Arrow Down
-
                 // Find existing pieces
                 var songSelectPanel = GameObject.Find("Main Stage Prefab/Z-Wrap/SongSelection/SelectionSongPanel");
                 var rightPanelGO = songSelectPanel.transform.Find("CentralPanel/Song Selection/VisibleWrap/Main Background Image/DetailsPanel(Right)/Sectional BG - Details");

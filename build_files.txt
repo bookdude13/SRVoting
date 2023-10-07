@@ -1,0 +1,2 @@
+SRModCore.dll
+SRVoting.dll

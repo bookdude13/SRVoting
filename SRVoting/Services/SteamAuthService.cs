@@ -46,20 +46,15 @@ namespace SRVoting.Services
                 // Get auth session ticket
                 int authTicketMaxLength = 1024;
                 Il2CppStructArray<byte> authTicket = new Il2CppStructArray<byte>(authTicketMaxLength);
-
-                // TODO figure out why it doesn't want length to be an 'out' variable anymore.
-                // Just using the max length for the buffer size below works.
-                // Note - this isn't good practice, and I don't know if there are any security implications
-                // to having a buffer be the wrong size in this case, but the risk seems low.
                 uint length = 0U;
-                if (SteamUser.GetAuthSessionTicket(authTicket, authTicket.Length, length) == HAuthTicket.Invalid)
+                if (SteamUser.GetAuthSessionTicket(authTicket, authTicket.Length, out length) == HAuthTicket.Invalid)
                 {
                     logger.Msg("There was error getting steam ticked");
                     return null;
                 }
 
                 // Start auth session
-                var beginAuthSessionResult = SteamUser.BeginAuthSession(authTicket, authTicket.Length, steamId);
+                var beginAuthSessionResult = SteamUser.BeginAuthSession(authTicket, (int)length, steamId);
                 logger.Msg("BeginAuthSession result: " + beginAuthSessionResult);
                 string userToken = null;
                 switch (beginAuthSessionResult)
@@ -94,12 +89,10 @@ namespace SRVoting.Services
                                 }*/
 
                                 logger.Msg("Getting session ticket to actually use now that we're verified");
-                                // TODO figure out why it can't send the length as an 'out' parameter.
-                                // Just using the max length for the buffer size below works
-                                lastTicket = SteamUser.GetAuthSessionTicket(authTicket, authTicketMaxLength, length);
+                                lastTicket = SteamUser.GetAuthSessionTicket(authTicket, authTicketMaxLength, out length);
                                 if (lastTicket != HAuthTicket.Invalid)
                                 {
-                                    userToken = BitConverter.ToString(authTicket, 0, (int)authTicketMaxLength).Replace("-", "");
+                                    userToken = BitConverter.ToString(authTicket, 0, (int)length).Replace("-", "");
                                     break;
                                 }
 

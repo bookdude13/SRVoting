@@ -56,9 +56,41 @@ namespace SRVoting.MonoBehaviors
             MelonCoroutines.Start(UpdateVoteUI());
         }
 
+        protected IEnumerator WaitForSongSelectionOpen()
+        {
+            var ssmInstance = Il2CppSynth.SongSelection.SongSelectionManager.GetInstance;
+            while (ssmInstance == null || !ssmInstance.SongSelectionOpenComplete)
+            {
+                yield return null;
+            }
+        }
+
+        protected IEnumerator WaitForSelectedTrack()
+        {
+            var ssmInstance = Il2CppSynth.SongSelection.SongSelectionManager.GetInstance;
+            while (ssmInstance == null || ssmInstance.SelectedGameTrack == null)
+            {
+                yield return null;
+            }
+        }
+
         Il2CppSynth.Retro.Game_Track_Retro GetSelectedTrack()
         {
-            return Il2CppSynth.SongSelection.SongSelectionManager.GetInstance?.SelectedGameTrack;
+            var ssmInstance = Il2CppSynth.SongSelection.SongSelectionManager.GetInstance;
+            if (ssmInstance == null)
+            {
+                logger.Msg("Null ssm instance!");
+                return null;
+            }
+
+            if (!ssmInstance.songSelectionOpenComplete)
+            {
+                logger.Msg("Not done opening song selection!");
+                return null;
+            }
+
+            var selectedTrack = ssmInstance?.SelectedGameTrack;
+            return selectedTrack;
         }
 
         protected virtual System.Collections.IEnumerator UpdateVoteUI()
@@ -77,7 +109,9 @@ namespace SRVoting.MonoBehaviors
             downVoteComponent.UpdateUI(false, false, "");
 
             logger.Debug("Song clicked; waiting for update");
-            yield return new WaitForSeconds(0.01f);
+            yield return WaitForSongSelectionOpen();
+            logger.Debug("Waiting for selected track");
+            yield return WaitForSelectedTrack();
 
             logger.Debug("Getting selected track...");
             var selectedTrack = GetSelectedTrack();
@@ -87,7 +121,7 @@ namespace SRVoting.MonoBehaviors
 
             if (songName == "" || currentSongHash == "")
             {
-                logger.Msg("No song selected");
+                logger.Msg($"No song selected. Name {songName}, hash {currentSongHash}");
                 upVoteComponent.UpdateUI(false, false, "");
                 downVoteComponent.UpdateUI(false, false, "");
             }

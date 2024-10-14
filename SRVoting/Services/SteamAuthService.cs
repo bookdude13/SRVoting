@@ -25,11 +25,26 @@ namespace SRVoting.Services
         public SteamAuthService(SRLogger logger)
         {
             this.logger = logger;
-            appId = SteamUtils.GetAppID(); // 885000
+
+            UpdateAppId();
+        }
+
+        private void UpdateAppId()
+        {
+            try
+            {
+                appId = SteamUtils.GetAppID(); // 885000
+            }
+            catch (Exception ex)
+            {
+                logger.Error("Failed to get app id: " + ex.Message);
+            }
         }
 
         public string GetAuthTicket()
         {
+            UpdateAppId();
+
             // Not initialized right away; wait until it is
             if (!SteamManager.Initialized)
             {

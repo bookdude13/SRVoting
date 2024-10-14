@@ -27,6 +27,7 @@ namespace SRVoting
         private VotingMainMenu votingBehaviorMainMenu;
         private VotingMultiplayer votingBehaviorMultiplayer;
         private GameObject rootGameObjectMultiplayer = null;
+        private bool servicesSetUp;
 
 
         public override void OnInitializeMelon()
@@ -44,16 +45,14 @@ namespace SRVoting
             SRScene scene = new SRScene(sceneName);
             logger.Msg("Scene initialized: " + sceneName + ". Type: " + scene.SceneType);
 
-            if (scene.SceneType == SRScene.SRSceneType.WARNING)
-            {
-                // After some things have initialized, but before main scene, set up services (gets Steam ticket)
-                logger.Msg("Setting up services...");
-                var steamAuthService = new SteamAuthService(logger);
-                synthriderzService = new SynthriderzService(logger, steamAuthService);
-            }
-
             if (scene.SceneType == SRScene.SRSceneType.MAIN_MENU)
             {
+                if (!servicesSetUp)
+                {
+                    SetupService();
+                    servicesSetUp = true;
+                }
+
                 logger.Msg("MainMenu loaded, looking for vote buttons");
                 logger.Msg("Setting up voting mono behavior");
 
@@ -71,6 +70,13 @@ namespace SRVoting
                 // Refresh right away to catch the case when returning from a song
                 votingBehaviorMainMenu.Refresh();
             }
+        }
+
+        private void SetupService()
+        {
+            logger.Msg("Setting up services...");
+            var steamAuthService = new SteamAuthService(logger);
+            synthriderzService = new SynthriderzService(logger, steamAuthService);
         }
 
         public void OnOpenMultiplayerRoomMenu(Il2CppSynth.Versus.Room room)

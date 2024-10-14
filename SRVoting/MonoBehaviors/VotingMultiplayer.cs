@@ -26,23 +26,23 @@ namespace SRVoting.MonoBehaviors
                     logger.Msg("Root " + rootGO);
                     
                     var arrowsContainer = rootGO.transform.Find("VolumeControl");
-                    logger.Msg("ctr " + arrowsContainer);
+                    //logger.Msg("ctr " + arrowsContainer);
                     var volumeText = arrowsContainer.Find("VALUE");
-                    logger.Msg("txt " + volumeText);
+                    //logger.Msg("txt " + volumeText);
                     var volumeLeft = arrowsContainer.Find("Arrow Up");
-                    logger.Msg("l " + volumeLeft);
+                    //logger.Msg("l " + volumeLeft);
                     var volumeRight = arrowsContainer.Find("Arrow Down");
-                    logger.Msg("r " + volumeRight);
+                    //logger.Msg("r " + volumeRight);
 
                     var favoriteWrapGO = rootGO.transform.Find("SongInfo/Favorite Wrap");
-                    logger.Msg("fav" + favoriteWrapGO);
+                    //logger.Msg("fav" + favoriteWrapGO);
 
                     // Create new pieces
                     downVoteComponent.CreateUIForHorizontal(
-                        favoriteWrapGO, -1.5f, Il2CppTMPro.TextAlignmentOptions.Right, volumeLeft, volumeText.gameObject
+                        favoriteWrapGO, -1.5f, Il2CppTMPro.TextAlignmentOptions.Right, volumeRight, volumeText.gameObject
                     );
                     upVoteComponent.CreateUIForHorizontal(
-                        favoriteWrapGO, 1.5f, Il2CppTMPro.TextAlignmentOptions.Left, volumeRight, volumeText.gameObject
+                        favoriteWrapGO, 1.5f, Il2CppTMPro.TextAlignmentOptions.Left, volumeLeft, volumeText.gameObject
                     );
 
                     logger.Msg("Done creating UI");
@@ -55,6 +55,8 @@ namespace SRVoting.MonoBehaviors
 
             yield return null;
         }
+
+        protected override bool WaitForSongSelection => false;
 
         protected override IEnumerator UpdateVoteUI()
         {

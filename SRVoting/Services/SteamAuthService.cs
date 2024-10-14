@@ -33,6 +33,9 @@ namespace SRVoting.Services
         {
             try
             {
+                // Used for debugging
+                //appId = new AppId_t(885000);
+                
                 appId = SteamUtils.GetAppID(); // 885000
             }
             catch (Exception ex)

@@ -27,6 +27,8 @@ namespace SRVoting.MonoBehaviors
         private string currentSongHash = "";
         private VoteState currentSongVote = VoteState.NO_VOTE;
 
+        protected virtual bool WaitForSongSelection => true;
+
         public VotingMonoBehavior(IntPtr ptr) : base(ptr) { }
 
         public void Init(SRLogger logger, SynthriderzService synthriderzService)
@@ -83,12 +85,6 @@ namespace SRVoting.MonoBehaviors
                 return null;
             }
 
-            if (!ssmInstance.songSelectionOpenComplete)
-            {
-                logger.Msg("Not done opening song selection!");
-                return null;
-            }
-
             var selectedTrack = ssmInstance?.SelectedGameTrack;
             return selectedTrack;
         }
@@ -108,8 +104,11 @@ namespace SRVoting.MonoBehaviors
             upVoteComponent.UpdateUI(false, false, "");
             downVoteComponent.UpdateUI(false, false, "");
 
-            logger.Debug("Song clicked; waiting for update");
-            yield return WaitForSongSelectionOpen();
+            if (WaitForSongSelection)
+            {
+                logger.Debug("Song clicked; waiting for update");
+                yield return WaitForSongSelectionOpen();
+            }
             logger.Debug("Waiting for selected track");
             yield return WaitForSelectedTrack();
 
@@ -122,8 +121,8 @@ namespace SRVoting.MonoBehaviors
             if (songName == "" || currentSongHash == "")
             {
                 logger.Msg($"No song selected. Name {songName}, hash {currentSongHash}");
-                upVoteComponent.UpdateUI(false, false, "");
-                downVoteComponent.UpdateUI(false, false, "");
+                upVoteComponent.UpdateUI(false, false, "N/A");
+                downVoteComponent.UpdateUI(false, false, "N/A");
             }
             else if (!isCustom)
             {

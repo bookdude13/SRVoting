@@ -1,4 +1,5 @@
 ﻿using Il2Cpp;
+using Il2Cppcom.Kluge.XR.Utils;
 using Il2CppInterop.Runtime.Attributes;
 using SRModCore;
 using System.Collections.Generic;
@@ -51,11 +52,11 @@ namespace SRVoting.UI
             }
 
             var vrtkHelper = arrow.GetComponent<Il2CppSynth.Utils.VRTKButtonHelper>();
-            logger.Msg("vrtk helper " + vrtkHelper);
-            logger.Msg("is active " + isActive);
 
             if (isActive)
             {
+                arrow.gameObject.SetActive(true);
+                
                 synthButton?.WhenClicked?.RemoveAllListeners();
                 synthButton?.WhenClicked?.AddListener(onArrowUse);
                 vrtkHelper.SetActive();
@@ -64,6 +65,8 @@ namespace SRVoting.UI
             {
                 synthButton?.WhenClicked?.RemoveAllListeners();
                 vrtkHelper.SetInactive();
+                
+                arrow.gameObject.SetActive(false);
             }
         }
 

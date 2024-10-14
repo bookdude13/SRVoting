@@ -220,7 +220,7 @@ namespace SRVoting.MonoBehaviors
                     string.Format("{0}", getVotesResponse.UpVoteCount)
                 );
                 downVoteComponent.UpdateUI(
-                    true,
+                    SRVoting.AllowDownVoting,
                     getVotesResponse.MyVote() == VoteState.VOTED_DOWN,
                     string.Format("{0}", getVotesResponse.DownVoteCount)
                 );

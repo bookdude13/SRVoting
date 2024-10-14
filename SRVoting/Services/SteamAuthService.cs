@@ -5,7 +5,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using SRModCore;
-using Steamworks;
+using Il2CppSteamworks;
+using Il2Cpp;
+using Il2CppInterop.Runtime.InteropTypes.Arrays;
 
 namespace SRVoting.Services
 {
@@ -15,18 +17,37 @@ namespace SRVoting.Services
 
         private SRLogger logger;
         private AppId_t appId;
-        private HAuthTicket lastTicket;
-        private EResult lastTicketResult;
-        private Callback<GetAuthSessionTicketResponse_t> m_GetAuthSessionTicketResponse;
+        private static HAuthTicket lastTicket;
+        private static EResult lastTicketResult;
+        private static Callback<GetAuthSessionTicketResponse_t> m_GetAuthSessionTicketResponse;
+        private static Action<GetAuthSessionTicketResponse_t> onCreate;
 
         public SteamAuthService(SRLogger logger)
         {
             this.logger = logger;
-            appId = SteamUtils.GetAppID(); // 885000
+
+            UpdateAppId();
+        }
+
+        private void UpdateAppId()
+        {
+            try
+            {
+                // Used for debugging
+                //appId = new AppId_t(885000);
+                
+                appId = SteamUtils.GetAppID(); // 885000
+            }
+            catch (Exception ex)
+            {
+                logger.Error("Failed to get app id: " + ex.Message);
+            }
         }
 
         public string GetAuthTicket()
         {
+            UpdateAppId();
+
             // Not initialized right away; wait until it is
             if (!SteamManager.Initialized)
             {
@@ -42,7 +63,7 @@ namespace SRVoting.Services
 
                 // Get auth session ticket
                 int authTicketMaxLength = 1024;
-                byte[] authTicket = new byte[authTicketMaxLength];
+                Il2CppStructArray<byte> authTicket = new Il2CppStructArray<byte>(authTicketMaxLength);
                 uint length = 0U;
                 if (SteamUser.GetAuthSessionTicket(authTicket, authTicket.Length, out length) == HAuthTicket.Invalid)
                 {
@@ -52,6 +73,7 @@ namespace SRVoting.Services
 
                 // Start auth session
                 var beginAuthSessionResult = SteamUser.BeginAuthSession(authTicket, (int)length, steamId);
+                logger.Msg("BeginAuthSession result: " + beginAuthSessionResult);
                 string userToken = null;
                 switch (beginAuthSessionResult)
                 {
@@ -66,16 +88,25 @@ namespace SRVoting.Services
                                 logger.Msg("User does not have license");
                                 break;
                             case EUserHasLicenseForAppResult.k_EUserHasLicenseResultHasLicense:
-                                if (m_GetAuthSessionTicketResponse == null)
+                                logger.Msg("User has license for app");
+                                /*if (m_GetAuthSessionTicketResponse == null)
                                 {
-                                    m_GetAuthSessionTicketResponse = Callback<GetAuthSessionTicketResponse_t>.Create(response => {
+                                    logger.Msg("Creating callback");
+                                    onCreate = new Action<GetAuthSessionTicketResponse_t>(response =>
+                                    {
+                                        logger.Msg("In callback");
                                         if (lastTicket == response.m_hAuthTicket)
                                         {
                                             lastTicketResult = response.m_eResult;
                                         }
                                     });
-                                }
+                                    logger.Msg("Setting callback");
+                                    m_GetAuthSessionTicketResponse = Callback<GetAuthSessionTicketResponse_t>
+                                        .Create(onCreate);
+                                    logger.Msg("Set callback");
+                                }*/
 
+                                logger.Msg("Getting session ticket to actually use now that we're verified");
                                 lastTicket = SteamUser.GetAuthSessionTicket(authTicket, authTicketMaxLength, out length);
                                 if (lastTicket != HAuthTicket.Invalid)
                                 {
@@ -90,13 +121,13 @@ namespace SRVoting.Services
                         }
                         break;
                     default:
-                        logger.Msg("Auth failed");
+                        logger.Msg("Auth failed. Result: " + beginAuthSessionResult.ToString());
                         break;
                 }
 
                 logger.Msg("Waiting for Steam callback...");
 
-                // Wait for ticket to be registered on the server side
+                /*// Wait for ticket to be registered on the server side
                 var startTime = DateTime.UtcNow;
                 float timeoutSec = 20f;
                 while (lastTicketResult != EResult.k_EResultOK && (DateTime.UtcNow - startTime).TotalSeconds < timeoutSec)
@@ -111,7 +142,7 @@ namespace SRVoting.Services
                 }
 
                 // Used, so revoke
-                lastTicketResult = EResult.k_EResultRevoked;
+                lastTicketResult = EResult.k_EResultRevoked;*/
 
                 logger.Msg("Done with Steam auth");
                 return userToken;
@@ -122,6 +153,14 @@ namespace SRVoting.Services
             }
 
             return null;
+        }
+
+        private static void OnAuthSessionCreate(GetAuthSessionTicketResponse_t response)
+        {
+            if (lastTicket == response.m_hAuthTicket)
+            {
+                lastTicketResult = response.m_eResult;
+            }
         }
 
         public void GetAuthTicketAsync(Action<string> callback)

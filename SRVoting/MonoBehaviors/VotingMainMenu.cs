@@ -1,32 +1,38 @@
-﻿using System.Collections;
+﻿using Il2CppInterop.Runtime.Attributes;
+using MelonLoader;
+using System;
+using System.Collections;
 using UnityEngine;
 
 namespace SRVoting.MonoBehaviors
 {
+    [RegisterTypeInIl2Cpp]
     public class VotingMainMenu : VotingMonoBehavior
     {
-        protected override IEnumerator EnsureUIExists()
+        public VotingMainMenu(IntPtr ptr) : base(ptr) { }
+
+        protected override System.Collections.IEnumerator EnsureUIExists()
         {
             if (!upVoteComponent.IsUiCreated || !downVoteComponent.IsUiCreated)
             {
                 logger.Msg("Initializing Main Menu UI...");
 
                 // Find existing pieces
-                var rootGO = GameObject.Find("CentralPanel/Song Selection/VisibleWrap");
+                var songSelectPanel = GameObject.Find("Main Stage Prefab/Z-Wrap/SongSelection/SelectionSongPanel");
+                var rightPanelGO = songSelectPanel.transform.Find("CentralPanel/Song Selection/VisibleWrap/Main Background Image/DetailsPanel(Right)/Sectional BG - Details");
+                var controlsGO = rightPanelGO.transform.Find("Controls-Buttons/PreviewVolumeControl");
+                var volumeText = controlsGO.Find("VolValue");
+                var volumeLeft = controlsGO.Find("Volume Down");
+                var volumeRight = controlsGO.Find("Volume UP");
 
-                var controlsGO = rootGO.transform.Find("Controls");
-                var volumeText = controlsGO.Find("MuteWrap/VALUE");
-                var volumeLeft = controlsGO.Find("MuteWrap/Arrow UP");
-                var volumeRight = controlsGO.Find("MuteWrap/Arrow Down");
-
-                var selectedTrackGO = rootGO.transform.Find("Selected Track");
+                var selectedTrackGO = rightPanelGO.transform.Find("Selected Track");
                 var difficultiesGO = selectedTrackGO.transform.Find("Difficulties");
                 Transform hardButton = difficultiesGO.Find("StandardButton - Hard");
                 Transform customButton = difficultiesGO.Find("StandardButton - Custom");
 
                 // Create new pieces
-                upVoteComponent.CreateUIForVertical(selectedTrackGO, difficultiesGO, hardButton, volumeLeft, volumeText.gameObject);
-                downVoteComponent.CreateUIForVertical(selectedTrackGO, difficultiesGO, customButton, volumeRight, volumeText.gameObject);
+                upVoteComponent.CreateUIForVertical(selectedTrackGO, difficultiesGO, hardButton, volumeRight, volumeText.gameObject);
+                downVoteComponent.CreateUIForVertical(selectedTrackGO, difficultiesGO, customButton, volumeLeft, volumeText.gameObject);
 
                 logger.Msg("Done creating main menu UI");
             }

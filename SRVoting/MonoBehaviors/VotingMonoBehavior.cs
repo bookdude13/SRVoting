@@ -1,12 +1,18 @@
-﻿using SRModCore;
+﻿using Il2CppInterop.Runtime.Attributes;
+using Il2CppMiKu.NET.Charting;
+using MelonLoader;
+using SRModCore;
 using SRVoting.Models;
 using SRVoting.Services;
 using SRVoting.UI;
+using System;
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace SRVoting.MonoBehaviors
 {
+    [RegisterTypeInIl2Cpp]
     public abstract class VotingMonoBehavior : MonoBehaviour
     {
         protected readonly string arrowUpName = "srvoting_voteArrowUp";
@@ -21,31 +27,69 @@ namespace SRVoting.MonoBehaviors
         private string currentSongHash = "";
         private VoteState currentSongVote = VoteState.NO_VOTE;
 
+        protected virtual bool WaitForSongSelection => true;
+
+        public VotingMonoBehavior(IntPtr ptr) : base(ptr) { }
+
         public void Init(SRLogger logger, SynthriderzService synthriderzService)
         {
             this.logger = logger;
             this.synthriderzService = synthriderzService;
 
-            upVoteComponent = new VoteDirectionComponent(logger, arrowUpName, Vote);
-            downVoteComponent = new VoteDirectionComponent(logger, arrowDownName, Vote);
+            upVoteComponent = new VoteDirectionComponent(
+                logger,
+                arrowUpName,
+                new Action(() => Vote(arrowUpName))
+            );
+            downVoteComponent = new VoteDirectionComponent(
+                logger,
+                arrowDownName,
+                new Action(() => Vote(arrowDownName))
+            );
 
-            StartCoroutine(EnsureUIExists());
+            MelonCoroutines.Start(EnsureUIExists());
         }
 
-        protected abstract IEnumerator EnsureUIExists();
+        protected abstract System.Collections.IEnumerator EnsureUIExists();
 
         public void Refresh()
         {
             logger.Msg("Refreshing UI");
-            StartCoroutine(UpdateVoteUI());
+            MelonCoroutines.Start(UpdateVoteUI());
         }
 
-        Synth.Retro.Game_Track_Retro GetSelectedTrack()
+        protected IEnumerator WaitForSongSelectionOpen()
         {
-            return Synth.SongSelection.SongSelectionManager.GetInstance?.SelectedGameTrack;
+            var ssmInstance = Il2CppSynth.SongSelection.SongSelectionManager.GetInstance;
+            while (ssmInstance == null || !ssmInstance.SongSelectionOpenComplete)
+            {
+                yield return null;
+            }
         }
 
-        protected virtual IEnumerator UpdateVoteUI()
+        protected IEnumerator WaitForSelectedTrack()
+        {
+            var ssmInstance = Il2CppSynth.SongSelection.SongSelectionManager.GetInstance;
+            while (ssmInstance == null || ssmInstance.SelectedGameTrack == null)
+            {
+                yield return null;
+            }
+        }
+
+        Il2CppSynth.Retro.Game_Track_Retro GetSelectedTrack()
+        {
+            var ssmInstance = Il2CppSynth.SongSelection.SongSelectionManager.GetInstance;
+            if (ssmInstance == null)
+            {
+                logger.Msg("Null ssm instance!");
+                return null;
+            }
+
+            var selectedTrack = ssmInstance?.SelectedGameTrack;
+            return selectedTrack;
+        }
+
+        protected virtual System.Collections.IEnumerator UpdateVoteUI()
         {
             if (synthriderzService == null)
             {
@@ -60,8 +104,13 @@ namespace SRVoting.MonoBehaviors
             upVoteComponent.UpdateUI(false, false, "");
             downVoteComponent.UpdateUI(false, false, "");
 
-            logger.Debug("Song clicked; waiting for update");
-            yield return new WaitForSeconds(0.01f);
+            if (WaitForSongSelection)
+            {
+                logger.Debug("Song clicked; waiting for update");
+                yield return WaitForSongSelectionOpen();
+            }
+            logger.Debug("Waiting for selected track");
+            yield return WaitForSelectedTrack();
 
             logger.Debug("Getting selected track...");
             var selectedTrack = GetSelectedTrack();
@@ -71,9 +120,9 @@ namespace SRVoting.MonoBehaviors
 
             if (songName == "" || currentSongHash == "")
             {
-                logger.Msg("No song selected");
-                upVoteComponent.UpdateUI(false, false, "");
-                downVoteComponent.UpdateUI(false, false, "");
+                logger.Msg($"No song selected. Name {songName}, hash {currentSongHash}");
+                upVoteComponent.UpdateUI(false, false, "N/A");
+                downVoteComponent.UpdateUI(false, false, "N/A");
             }
             else if (!isCustom)
             {
@@ -105,10 +154,8 @@ namespace SRVoting.MonoBehaviors
             }
         }
 
-        private void Vote(object sender, VRTK.InteractableObjectEventArgs e)
+        private void Vote(string senderName)
         {
-            string senderName = ((VRTK.VRTK_InteractableObject)sender).name;
-
             // Translate sender into up/down
             VoteState newVote = senderName == arrowUpName ? VoteState.VOTED_UP : VoteState.VOTED_DOWN;
 
@@ -120,10 +167,10 @@ namespace SRVoting.MonoBehaviors
             downVoteComponent.DisableEvents();
             
             logger.Debug($"Voting for song {currentSongHash}. Old: {currentSongVote}, New: {voteToSend}");
-            StartCoroutine(VoteAndUpdateUI(voteToSend));
+            MelonCoroutines.Start(VoteAndUpdateUI(voteToSend));
         }
 
-        private IEnumerator VoteAndUpdateUI(VoteState vote)
+        private System.Collections.IEnumerator VoteAndUpdateUI(VoteState vote)
         {
             VotesResponseModel getVotesResponse = null;
             string errorMessage = null;
@@ -173,7 +220,7 @@ namespace SRVoting.MonoBehaviors
                     string.Format("{0}", getVotesResponse.UpVoteCount)
                 );
                 downVoteComponent.UpdateUI(
-                    true,
+                    SRVoting.AllowDownVoting,
                     getVotesResponse.MyVote() == VoteState.VOTED_DOWN,
                     string.Format("{0}", getVotesResponse.DownVoteCount)
                 );

@@ -22,27 +22,33 @@ namespace SRVoting.MonoBehaviors
                 try
                 {
                     // Find existing pieces
-                    var rootGO = GameObject.Find("Main Stage Prefab/Z-Wrap/Multiplayer/RoomPanel/MultiplayerRoomPanel/BottomPanel");
+                    var rootGO = GameObject.Find("Main Stage Prefab/Z-Wrap/Multiplayer/RoomPanel/Scale Wrap/MultiplayerRoomPanel/MainPanel/BottomPanel");
                     logger.Msg("Root " + rootGO);
                     
                     var arrowsContainer = rootGO.transform.Find("VolumeControl");
-                    //logger.Msg("ctr " + arrowsContainer);
                     var volumeText = arrowsContainer.Find("VALUE");
-                    //logger.Msg("txt " + volumeText);
                     var volumeLeft = arrowsContainer.Find("Arrow Up");
-                    //logger.Msg("l " + volumeLeft);
                     var volumeRight = arrowsContainer.Find("Arrow Down");
-                    //logger.Msg("r " + volumeRight);
+                    var infoWrapGO = rootGO.transform.Find("Song Info Wrap");
+                    
+                    // Horizontal layout is centered within the bottom panel, left to right as follows:
+                    // - button, down votes, up votes, + button
+                    // Make sure to leave enough room for large numbers of votes to not have the text overlap
 
-                    var favoriteWrapGO = rootGO.transform.Find("SongInfo/Favorite Wrap");
-                    //logger.Msg("fav" + favoriteWrapGO);
+                    var centerOffsetFromReference = new Vector3(0.0f, 1.6f, 0f);
+
+                    var downButtonOffset = new Vector3(-2.4f, 0.0f, 0.0f);
+                    var downTextOffset = new Vector3(-0.4f, 0.0f, 0.0f);
+
+                    var upTextOffset = new Vector3(0.1f, 0.0f, 0.0f);
+                    var upButtonOffset = new Vector3(2.1f, 0.0f, 0.0f);
 
                     // Create new pieces
                     downVoteComponent.CreateUIForHorizontal(
-                        favoriteWrapGO, -1.5f, Il2CppTMPro.TextAlignmentOptions.Right, volumeRight, volumeText.gameObject
+                        infoWrapGO, centerOffsetFromReference, downButtonOffset, downTextOffset, Il2CppTMPro.TextAlignmentOptions.Left, volumeRight, volumeText.gameObject
                     );
                     upVoteComponent.CreateUIForHorizontal(
-                        favoriteWrapGO, 1.5f, Il2CppTMPro.TextAlignmentOptions.Left, volumeLeft, volumeText.gameObject
+                        infoWrapGO, centerOffsetFromReference, upButtonOffset, upTextOffset, Il2CppTMPro.TextAlignmentOptions.Right, volumeLeft, volumeText.gameObject
                     );
 
                     logger.Msg("Done creating UI");

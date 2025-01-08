@@ -68,7 +68,9 @@ namespace SRVoting.UI
 
         public void CreateUIForHorizontal(
             Transform parent,
-            float offsetX,
+            Vector3 centerOffset,
+            Vector3 buttonOffsetFromCenter,
+            Vector3 textOffsetFromCenter,
             Il2CppTMPro.TextAlignmentOptions textAlignment,
             Transform arrowToClone,
             GameObject textReference
@@ -83,14 +85,14 @@ namespace SRVoting.UI
 
             var voteContainer = new GameObject("srvoting_container");
             voteContainer.transform.SetParent(parent, false);
-            voteContainer.transform.localPosition = Vector3.zero;
+            voteContainer.transform.localPosition = centerOffset;
             voteContainer.transform.localRotation = parent.localRotation;
 
             arrow = CreateVoteArrow(voteContainer.transform, arrowToClone);
             countText = CreateVoteCountText(voteContainer.transform, arrow, textReference);
 
-            arrow.transform.localPosition += new Vector3(offsetX, 0.0f, 0.0f);
-            countText.transform.localPosition += new Vector3(offsetX * 2.0f, 0.0f, 0.0f);
+            arrow.transform.localPosition += buttonOffsetFromCenter;
+            countText.transform.localPosition += textOffsetFromCenter;
             countText.alignment = textAlignment;
         }
 

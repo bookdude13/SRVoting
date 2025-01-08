@@ -19,8 +19,8 @@ namespace SRVoting.Services
         private AppId_t appId;
         private static HAuthTicket lastTicket;
         private static EResult lastTicketResult;
-        private static Callback<GetAuthSessionTicketResponse_t> m_GetAuthSessionTicketResponse;
-        private static Action<GetAuthSessionTicketResponse_t> onCreate;
+        //private static Callback<GetAuthSessionTicketResponse_t> m_GetAuthSessionTicketResponse;
+        //private static Action<GetAuthSessionTicketResponse_t> onCreate;
 
         public SteamAuthService(SRLogger logger)
         {

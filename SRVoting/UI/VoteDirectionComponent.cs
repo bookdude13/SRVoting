@@ -51,20 +51,16 @@ namespace SRVoting.UI
                 countText.color = new Color(0.4f, 0.4f, 0.4f, 1.0f);
             }
 
-            var vrtkHelper = arrow.GetComponent<Il2CppSynth.Utils.VRTKButtonHelper>();
-
             if (isActive)
             {
                 arrow.gameObject.SetActive(true);
                 
                 synthButton?.WhenClicked?.RemoveAllListeners();
                 synthButton?.WhenClicked?.AddListener(onArrowUse);
-                vrtkHelper.SetActive();
             }
             else
             {
                 synthButton?.WhenClicked?.RemoveAllListeners();
-                vrtkHelper.SetInactive();
                 
                 arrow.gameObject.SetActive(false);
             }
@@ -72,7 +68,9 @@ namespace SRVoting.UI
 
         public void CreateUIForHorizontal(
             Transform parent,
-            float offsetX,
+            Vector3 centerOffset,
+            Vector3 buttonOffsetFromCenter,
+            Vector3 textOffsetFromCenter,
             Il2CppTMPro.TextAlignmentOptions textAlignment,
             Transform arrowToClone,
             GameObject textReference
@@ -87,21 +85,22 @@ namespace SRVoting.UI
 
             var voteContainer = new GameObject("srvoting_container");
             voteContainer.transform.SetParent(parent, false);
-            voteContainer.transform.localPosition = Vector3.zero;
+            voteContainer.transform.localPosition = centerOffset;
             voteContainer.transform.localRotation = parent.localRotation;
 
             arrow = CreateVoteArrow(voteContainer.transform, arrowToClone);
             countText = CreateVoteCountText(voteContainer.transform, arrow, textReference);
 
-            arrow.transform.localPosition += new Vector3(offsetX, 0.0f, 0.0f);
-            countText.transform.localPosition += new Vector3(offsetX * 2.0f, 0.0f, 0.0f);
+            arrow.transform.localPosition += buttonOffsetFromCenter;
+            countText.transform.localPosition += textOffsetFromCenter;
             countText.alignment = textAlignment;
         }
 
         public void CreateUIForVertical(
             Transform parent,
             Transform leftSideReference,
-            Transform rightOffsetReference,
+            Vector3 positionOffset,
+            Vector3 textOffsetFromArrow,
             Transform arrowToClone,
             GameObject textReference
         )
@@ -115,12 +114,14 @@ namespace SRVoting.UI
 
             var voteContainer = new GameObject("srvoting_container");
             voteContainer.transform.SetParent(parent, false);
-            voteContainer.transform.localPosition = leftSideReference.localPosition + rightOffsetReference.localPosition + new Vector3(2.0f, 0.0f, 0.0f);
+            voteContainer.transform.localPosition = leftSideReference.localPosition + positionOffset;
             voteContainer.transform.localRotation = leftSideReference.localRotation;
 
             arrow = CreateVoteArrow(voteContainer.transform, arrowToClone);
             countText = CreateVoteCountText(voteContainer.transform, arrow, textReference);
-            countText.transform.localPosition += new Vector3(1.2f, 0.0f, 0.0f);
+            
+            countText.transform.localPosition += textOffsetFromArrow;
+            arrow.transform.localPosition = Vector3.zero;
         }
 
         private GameObject CreateVoteArrow(Transform voteContainer, Transform arrowToClone)
@@ -129,7 +130,6 @@ namespace SRVoting.UI
             var voteArrow = GameObject.Instantiate(arrowToClone, voteContainer.transform);
             voteArrow.name = ArrowName;
             voteArrow.localPosition = Vector3.zero;
-            voteArrow.localEulerAngles = arrowToClone.localEulerAngles + new Vector3(0f, 0f, 90f);
 
             // Directly removing persistent listeners doesn't work
             // See https://forum.unity.com/threads/documentation-unityevent-removealllisteners-only-removes-non-persistent-listeners.341796/
@@ -137,7 +137,7 @@ namespace SRVoting.UI
             // Wiping out the WhenClicked callback gets rid of old behavior
             // and lets us add our own callbacks without any hassle
             logger.Msg("Setting up button");
-            var synthButton = voteArrow.gameObject.GetComponent<SynthUIButton>();
+            synthButton = voteArrow.gameObject.GetComponent<SynthUIButton>();
             synthButton.WhenClicked = new UnityEvent();
 
             voteArrow.gameObject.SetActive(true);
@@ -159,7 +159,10 @@ namespace SRVoting.UI
 
             var text = voteCountText.GetComponent<Il2CppTMPro.TMP_Text>();
             text.SetText("#####");
-            text.alignment = Il2CppTMPro.TextAlignmentOptions.Left;
+            text.alignment = Il2CppTMPro.TextAlignmentOptions.Center;
+
+            // Min/Max was 0.15/0.24 before
+            text.fontSizeMax = 0.36f;
 
             logger.Debug("Text added");
             return text;

@@ -23,7 +23,7 @@ namespace SRVoting
         public static SRVoting Instance { get; private set; }
 
         // Trying this out. Don't allow downvoting by default, just upvotes
-        public static bool AllowDownVoting = false;
+        public static bool AllowDownVoting = true;
 
         private SRLogger logger;
         private SynthriderzService synthriderzService;

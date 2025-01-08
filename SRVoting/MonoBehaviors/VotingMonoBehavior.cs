@@ -101,6 +101,7 @@ namespace SRVoting.MonoBehaviors
             yield return EnsureUIExists();
 
             // Start disabled while we wait for everything
+            logger.Debug("Starting disabled");
             upVoteComponent.UpdateUI(false, false, "");
             downVoteComponent.UpdateUI(false, false, "");
 

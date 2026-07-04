@@ -1,18 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using MelonLoader;
+﻿using MelonLoader;
 using SRModCore;
 using SRVoting.MonoBehaviors;
 using SRVoting.Services;
-using Il2CppSynth.Versus.Types;
 using UnityEngine;
-using UnityEngine.UI;
 using Il2CppSynth.Data;
-using Il2Cppcom.Kluge.XR.Utils;
 
 namespace SRVoting
 {
@@ -82,7 +73,7 @@ namespace SRVoting
             synthriderzService = new SynthriderzService(logger, steamAuthService);
         }
 
-        public void OnOpenMultiplayerRoomMenu(Il2CppSynth.Versus.Room room)
+        public void OnOpenMultiplayerRoomMenu()
         {
             EnsureMultiplayerObjects();
             votingBehaviorMultiplayer?.Refresh();

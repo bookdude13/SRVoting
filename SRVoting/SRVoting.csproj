@@ -6,9 +6,10 @@
     <AssemblyTitle>SRVoting</AssemblyTitle>
     <Product>SRVoting</Product>
     <Copyright>Copyright ©  2025</Copyright>
-    <AssemblyVersion>2.1.0.0</AssemblyVersion>
-    <FileVersion>2.1.0.0</FileVersion>
-    <Version>2.1.0.0</Version>
+    <SRLibVersion>2.2.0.0</SRLibVersion>
+    <AssemblyVersion>$(SRLibVersion)</AssemblyVersion>
+    <FileVersion>$(SRLibVersion)</FileVersion>
+    <Version>$(SRLibVersion)</Version>
     <SynthRidersDir>C:\Program Files (x86)\Steam\steamapps\common\SynthRiders</SynthRidersDir>
   </PropertyGroup>
   <ItemGroup>
